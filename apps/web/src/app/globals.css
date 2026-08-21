@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Cappuccino theme — warm coffee tones. Dark is the default. */
+:root {
+  --background: #f4efe6;
+  --foreground: #201812;
+  --card: #fdfaf4;
+  --card-foreground: #201812;
+  --popover: #fdfaf4;
+  --popover-foreground: #201812;
+  --primary: #8a5a33;
+  --primary-foreground: #fdfaf4;
+  --secondary: #eae0d0;
+  --secondary-foreground: #201812;
+  --muted: #e9e0d2;
+  --muted-foreground: #7a6a58;
+  --accent: #eadcc8;
+  --accent-foreground: #201812;
+  --destructive: #b94f3b;
+  --destructive-foreground: #fdfaf4;
+  --success: #5d8a4e;
+  --warning: #c78a2f;
+  --border: #e2d7c4;
+  --input: #d4c6ad;
+  --ring: #8a5a33;
+  --radius: 1.375rem;
+}
+
+.dark {
+  --background: #14100d;
+  --foreground: #f5efe6;
+  --card: #1e1813;
+  --card-foreground: #f5efe6;
+  --popover: #1e1813;
+  --popover-foreground: #f5efe6;
+  --primary: #c89b6a;
+  --primary-foreground: #2a2017;
+  --secondary: #2b221a;
+  --secondary-foreground: #f5efe6;
+  --muted: #2a221a;
+  --muted-foreground: #a99b8a;
+  --accent: #2f251c;
+  --accent-foreground: #f5efe6;
+  --destructive: #e0785a;
+  --destructive-foreground: #2a2017;
+  --success: #8fbf7f;
+  --warning: #d9a441;
+  --border: #3a2e24;
+  --input: #45372b;
+  --ring: #c89b6a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 12px);
+  --radius-md: calc(var(--radius) - 8px);
+  --radius-lg: calc(var(--radius) - 4px);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --font-serif: var(--font-playfair);
+  --font-handwriting: var(--font-caveat);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  h1,
+  h2,
+  h3 {
+    @apply tracking-[-0.02em];
+  }
+  ::selection {
+    @apply bg-primary text-primary-foreground;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .apple-card {
+    @apply relative rounded-[22px] border border-black/10 bg-white/70 backdrop-blur-2xl shadow-[0_0_0_0.5px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] dark:border-white/15 dark:bg-[#221a13]/60 dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)];
+  }
+  .apple-card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.05),0_16px_40px_rgba(0,0,0,0.12)];
+  }
+  .glass {
+    @apply relative border border-black/10 bg-white/60 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:border-white/15 dark:bg-[#1c150f]/55 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)];
+  }
+  /* Frosted top sheen + inner edge light — gives that Apple "glass" pop */
+  .glass::before,
+  .apple-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 40%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .dock-item {
+    @apply relative flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-all duration-200 hover:scale-110 hover:bg-black/5 hover:text-primary dark:hover:bg-white/10;
+  }
+  .dock-item-active {
+    @apply bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:bg-primary hover:text-primary-foreground dark:shadow-[0_4px_12px_rgba(200,155,106,0.4)];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
