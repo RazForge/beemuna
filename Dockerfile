@@ -14,4 +14,5 @@ COPY apps/api/ .
 
 EXPOSE 8002
 
-CMD sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8002} --timeout-keep-alive 300"
+ENV PORT=8002
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 300"]
