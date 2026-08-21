@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   basePath: "",
   
   // Output configuration
-  output: "standalone",
+  // output: "standalone", // Disabled for Vercel compatibility
   
   // Image optimization
   images: {
