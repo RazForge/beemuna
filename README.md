@@ -2,7 +2,7 @@
 
 > **Your time. Your knowledge. Your direction.**
 
-BE'EMUNA (በእምነት / באמונה — "with faith, in faith, with conviction") is a full-stack personal operating system for productivity, timeline/journaling, knowledge management, research, and AI-powered assistance.
+BE'EMUNA is a full-stack personal operating system for productivity, timeline/journaling, knowledge management, research, and AI-powered assistance.
 
 It is a **monorepo** containing a Next.js frontend, a FastAPI backend, background workers, and shared packages, designed to be production-ready and self-hostable.
 
