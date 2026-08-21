@@ -2,18 +2,19 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 \
-    libgl1 \
-    libglib2.0-0 \
-  && rm -rf /var/lib/apt/lists/*
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
+# Copy requirements first for caching
 COPY apps/api/requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY apps/api/app ./app
-COPY workers ./workers
+# Copy worker code
+COPY workers/ .
 
-ENV PYTHONPATH=/app
-
+# Run the worker
 CMD ["python", "worker.py"]

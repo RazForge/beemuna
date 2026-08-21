@@ -2,23 +2,22 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 \
-    libgl1 \
-    libglib2.0-0 \
-  && rm -rf /var/lib/apt/lists/*
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
+# Copy requirements first for caching
 COPY apps/api/requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY apps/api/app ./app
-COPY apps/api/alembic ./alembic
-COPY apps/api/alembic.ini .
+# Copy application code
+COPY apps/api/ .
 
-RUN mkdir -p /app/data/uploads
+# Expose port
+EXPOSE 8002
 
-ENV PYTHONPATH=/app
-
-EXPOSE 8000
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002", "--timeout-keep-alive", "300"]
