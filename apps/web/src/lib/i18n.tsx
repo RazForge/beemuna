@@ -68,7 +68,7 @@ const EN: Record<string, string> = {
   nav_goals: "Goals",
   nav_journey: "Journey",
   nav_knowledge: "Knowledge",
-  nav_ai: "AI Assistant",
+  nav_ai: "AI",
   nav_notifications: "Notifications",
   nav_settings: "Settings",
   nav_sign_out: "Sign Out",
