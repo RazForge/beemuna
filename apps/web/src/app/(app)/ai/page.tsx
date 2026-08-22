@@ -203,7 +203,7 @@ export default function AIPage() {
   const messages = detailQuery.data?.messages ?? [];
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] max-w-6xl flex-col gap-3 md:gap-4">
+    <div className="mx-auto flex h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)] max-w-6xl flex-col gap-3 md:gap-4">
       {/* Header */}
       <header className="rounded-2xl border border-border/50 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl p-3 md:p-6 shadow-lg shadow-black/[0.03] dark:shadow-black/20">
         <div className="flex flex-col gap-3">
@@ -281,18 +281,23 @@ export default function AIPage() {
               <div
                 key={conv.id}
                 className={cn(
-                  "group flex items-center gap-1 rounded-xl px-1 py-1 transition-colors",
-                  isActive ? "bg-primary/10 text-primary" : "hover:bg-black/5 dark:hover:bg-white/10",
+                  "group flex items-center gap-1 rounded-xl px-1 py-1 transition-all duration-200",
+                  isActive
+                    ? "bg-primary/10 text-primary shadow-sm"
+                    : "hover:bg-white/40 dark:hover:bg-white/[0.06] hover:backdrop-blur-sm",
                 )}
               >
                 <button
                   onClick={() => { setActiveConv(conv.id); setShowSidebar(false); }}
-                  className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-2 text-left"
+                  className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-2.5 text-left transition-colors"
                 >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <MessageSquare className="h-3.5 w-3.5" />
+                  <span className={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-colors",
+                    isActive ? "bg-primary/20" : "bg-white/40 dark:bg-white/[0.06] backdrop-blur-sm",
+                  )}>
+                    <MessageSquare className="h-4 w-4" />
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
                     {conv.title}
                   </span>
                 </button>
@@ -386,7 +391,7 @@ export default function AIPage() {
             )}
           </div>
 
-          <div className="border-t border-border/50 bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl p-3 md:p-4">
+          <div className="border-t border-border/50 bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl p-3 md:p-4 pb-4 md:pb-5">
             <div className="flex items-end gap-2">
               <textarea
                 value={draft}
