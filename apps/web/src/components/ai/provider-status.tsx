@@ -21,13 +21,16 @@ interface ProviderStatus {
 export function ProviderStatusCard() {
   const { t } = useLang();
   const [status, setStatus] = useState<ProviderStatus | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!getToken()) return;
-    apiGet<ProviderStatus>("/ai/providers").then(setStatus).catch(() => {});
+    apiGet<ProviderStatus>("/ai/providers")
+      .then(setStatus)
+      .catch(() => setError(true));
   }, []);
 
-  const isActive = status?.gemini_configured || status?.nvidia_configured;
+  const isConnected = !error && status !== null;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
@@ -41,12 +44,12 @@ export function ProviderStatusCard() {
         <span
           className={cn(
             "rounded-full px-2.5 py-1 text-xs font-semibold",
-            isActive
+            isConnected
               ? "bg-success/10 text-success"
-              : "bg-muted text-muted-foreground",
+              : "bg-destructive/10 text-destructive",
           )}
         >
-          {isActive ? "Active" : "Offline"}
+          {isConnected ? "Connected" : "Offline"}
         </span>
       </div>
     </div>
