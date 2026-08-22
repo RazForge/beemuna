@@ -5,9 +5,9 @@ import { PageMotion } from "@/components/motion/page-motion";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="relative min-h-full">
+      <div className="relative min-h-full pb-20">
         <Dock />
-        <main className="mx-auto max-w-[1400px] px-6 pb-36 pt-12 md:px-12">
+        <main className="mx-auto max-w-[1400px] px-4 pt-4 pb-8 md:px-12 md:pt-12 md:pb-36">
           <PageMotion>{children}</PageMotion>
         </main>
       </div>

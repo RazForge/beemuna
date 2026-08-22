@@ -134,49 +134,49 @@ export default function DashboardPage() {
     : null;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-4 md:space-y-8">
       {/* Hero header */}
-      <motion.header {...fade} className="flex flex-col items-center pt-4 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      <motion.header {...fade} className="flex flex-col items-center pt-2 md:pt-4 text-center">
+        <p className="text-[10px] md:text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           {greeting}
           {firstName ? `, ${firstName}` : ""}
         </p>
 
         {/* Compact clock + date */}
-        <div className="mt-6 flex items-center gap-6">
-          <div className="relative h-40 w-40 rounded-full border border-border bg-gradient-to-b from-card to-muted/30">
+        <div className="mt-4 md:mt-6 flex items-center gap-4 md:gap-6">
+          <div className="relative h-24 w-24 md:h-40 md:w-40 rounded-full border border-border bg-gradient-to-b from-card to-muted/30">
             {Array.from({ length: 12 }, (_, i) => (
               <span key={i} className="absolute inset-0" style={{ transform: `rotate(${i * 30}deg)` }}>
                 <span
                   className={`absolute left-1/2 top-1.5 -translate-x-1/2 rounded-full ${
-                    i % 3 === 0 ? "h-3 w-[3px] bg-foreground/70" : "h-1.5 w-[1.5px] bg-foreground/30"
+                    i % 3 === 0 ? "h-2.5 w-[2px] md:h-3 md:w-[3px] bg-foreground/70" : "h-1 w-[1px] md:h-1.5 md:w-[1.5px] bg-foreground/30"
                   }`}
                 />
               </span>
             ))}
             <motion.div
-              className="absolute left-1/2 top-1/2 h-[3px] w-12 rounded-full bg-foreground"
+              className="absolute left-1/2 top-1/2 h-[2px] md:h-[3px] w-8 md:w-12 rounded-full bg-foreground"
               style={{ transformOrigin: "0% 50%" }}
               animate={{ rotate: hourAngle }}
               transition={{ type: "spring", stiffness: 60, damping: 15 }}
             />
             <motion.div
-              className="absolute left-1/2 top-1/2 h-[2px] w-16 rounded-full bg-foreground/70"
+              className="absolute left-1/2 top-1/2 h-[2px] w-10 md:w-16 rounded-full bg-foreground/70"
               style={{ transformOrigin: "0% 50%" }}
               animate={{ rotate: minuteAngle }}
               transition={{ type: "spring", stiffness: 120, damping: 15 }}
             />
             <motion.div
-              className="absolute left-1/2 top-1/2 h-px w-18 rounded-full bg-primary"
+              className="absolute left-1/2 top-1/2 h-px w-12 md:w-18 rounded-full bg-primary"
               style={{ transformOrigin: "0% 50%" }}
               animate={{ rotate: secondAngle }}
               transition={{ duration: 1, ease: "linear" }}
             />
-            <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-md" />
+            <span className="absolute left-1/2 top-1/2 h-1.5 w-1.5 md:h-2 md:w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-md" />
           </div>
 
           <div className="text-left">
-            <p className="text-lg font-semibold text-foreground">{gregDate}</p>
+            <p className="text-sm md:text-lg font-semibold text-foreground">{gregDate}</p>
             {secondaryDates.map(
               (line, i) =>
                 line && (
@@ -211,52 +211,52 @@ export default function DashboardPage() {
       {/* Stats grid */}
       {analytics && (
         <motion.section {...fade} transition={{ duration: 0.4, delay: 0.05 }}>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-4">
             <Link href="/tasks" className="stat-card group hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <CheckCircle2 className="h-4 w-4" />
+                <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">{t("tasks")}</span>
+                <span className="text-[11px] md:text-xs font-medium text-muted-foreground">{t("tasks")}</span>
               </div>
-              <p className="stat-card-value mt-3 text-primary">{analytics.tasks.completed}</p>
-              <p className="stat-card-label">of {analytics.tasks.total} completed</p>
+              <p className="stat-card-value mt-2 md:mt-3 text-xl md:text-3xl text-primary">{analytics.tasks.completed}</p>
+              <p className="stat-card-label text-[11px] md:text-sm">of {analytics.tasks.total} completed</p>
             </Link>
 
             <Link href="/habits" className="stat-card group hover:border-success/30 hover:bg-success/5 transition-colors">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-success/10 text-success">
-                  <Flame className="h-4 w-4" />
+                <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-xl bg-success/10 text-success">
+                  <Flame className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">{t("habits")}</span>
+                <span className="text-[11px] md:text-xs font-medium text-muted-foreground">{t("habits")}</span>
               </div>
-              <p className="stat-card-value mt-3 text-success">
+              <p className="stat-card-value mt-2 md:mt-3 text-xl md:text-3xl text-success">
                 {topStreak ? topStreak[1] : 0}
               </p>
-              <p className="stat-card-label">day streak{topStreak && topStreak[1] !== 1 ? "s" : ""}</p>
+              <p className="stat-card-label text-[11px] md:text-sm">day streak{topStreak && topStreak[1] !== 1 ? "s" : ""}</p>
             </Link>
 
             <Link href="/focus" className="stat-card group hover:border-warning/30 hover:bg-warning/5 transition-colors">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-warning/10 text-warning">
-                  <Clock className="h-4 w-4" />
+                <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-xl bg-warning/10 text-warning">
+                  <Clock className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">{t("focus")}</span>
+                <span className="text-[11px] md:text-xs font-medium text-muted-foreground">{t("focus")}</span>
               </div>
-              <p className="stat-card-value mt-3 text-warning">
+              <p className="stat-card-value mt-2 md:mt-3 text-xl md:text-3xl text-warning">
                 {Math.floor(analytics.focus.total_minutes / 60)}h
               </p>
-              <p className="stat-card-label">{analytics.focus.total_minutes % 60}m focused</p>
+              <p className="stat-card-label text-[11px] md:text-sm">{analytics.focus.total_minutes % 60}m focused</p>
             </Link>
 
             <Link href="/goals" className="stat-card group hover:border-accent-foreground/30 hover:bg-accent/50 transition-colors">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-                  <Target className="h-4 w-4" />
+                <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+                  <Target className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">{t("goals")}</span>
+                <span className="text-[11px] md:text-xs font-medium text-muted-foreground">{t("goals")}</span>
               </div>
-              <p className="stat-card-value mt-3 text-accent-foreground">{analytics.goals.active}</p>
+              <p className="stat-card-value mt-2 md:mt-3 text-xl md:text-3xl text-accent-foreground">{analytics.goals.active}</p>
               <p className="stat-card-label">active goals</p>
             </Link>
           </div>

@@ -246,36 +246,38 @@ export default function CalendarPage() {
         : `g-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 md:gap-6">
       {/* Header */}
-      <header className="glass rounded-[28px] p-7 flex flex-wrap items-center justify-between gap-4 shadow-xl border-white/20 dark:border-white/5">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-            {t("calendar_title")}
-          </h1>
-          <p className="text-muted-foreground mt-1.5 text-sm font-medium">
-            {isMuslim ? t("calendar_subtitle_islamic") : t("calendar_subtitle_dual")}
-          </p>
-        </div>
-        <div className="glass inline-flex rounded-full p-1 border-white/30 dark:border-white/10 shadow-sm">
-          {modes.map((m) => (
-            <button
-              key={m}
-              onClick={() => switchMode(m)}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-sm font-semibold transition-all",
-                mode === m ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {modeLabels[m]}
-            </button>
-          ))}
+      <header className="rounded-2xl border border-border bg-card p-4 md:p-7">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl md:text-3xl font-extrabold tracking-tight">
+              {t("calendar_title")}
+            </h1>
+            <p className="text-muted-foreground mt-1 text-xs md:text-sm font-medium">
+              {isMuslim ? t("calendar_subtitle_islamic") : t("calendar_subtitle_dual")}
+            </p>
+          </div>
+          <div className="inline-flex rounded-full border border-border bg-card p-0.5">
+            {modes.map((m) => (
+              <button
+                key={m}
+                onClick={() => switchMode(m)}
+                className={cn(
+                  "rounded-full px-3 md:px-4 py-1.5 text-xs md:text-sm font-semibold transition-all",
+                  mode === m ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {modeLabels[m]}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
       {/* Month card */}
-      <div className="apple-card p-6">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="rounded-2xl border border-border bg-card p-3 md:p-6">
+        <div className="mb-3 md:mb-5 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
             className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
@@ -311,7 +313,7 @@ export default function CalendarPage() {
           lang={lang}
         />
 
-        <div className="mt-4 flex items-center justify-between border-t border-black/5 pt-4 dark:border-white/10">
+        <div className="mt-3 md:mt-4 flex items-center justify-between border-t border-black/5 pt-3 md:pt-4 dark:border-white/10">
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-warning" /> {t("holiday")}
@@ -331,7 +333,7 @@ export default function CalendarPage() {
 
       {/* Holidays this month */}
       {monthHolidays.length > 0 && (
-        <div className="apple-card p-5">
+        <div className="rounded-2xl border border-border bg-card p-3 md:p-5">
           <h2 className="mb-3 text-[15px] font-semibold">
           {lang === "am" ? "በዓላት የዚህ ወር" : "Holidays this month"}
         </h2>
@@ -351,7 +353,7 @@ export default function CalendarPage() {
 
       {/* Selected day */}
       {selectedDay && selectedEth && (
-        <div className="apple-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-3 md:p-6">
           <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-[19px] font-semibold">
               {selectedDay.toLocaleDateString(locale, {
