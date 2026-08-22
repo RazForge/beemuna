@@ -9,15 +9,15 @@ let currentToken: string | null = null;
 export function setToken(token: string | null) {
   currentToken = token;
   if (token) {
-    sessionStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(TOKEN_KEY, token);
   } else {
-    sessionStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_KEY);
   }
 }
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  if (!currentToken) currentToken = sessionStorage.getItem(TOKEN_KEY);
+  if (!currentToken) currentToken = localStorage.getItem(TOKEN_KEY);
   return currentToken;
 }
 
