@@ -47,7 +47,6 @@ function playAlarm() {
       osc.start(ctx.currentTime + start);
       osc.stop(ctx.currentTime + start + dur);
     };
-    // 15-second alarm pattern: repeated beeps with pauses
     for (let cycle = 0; cycle < 5; cycle++) {
       const base = cycle * 3;
       playBeep(880, base, 0.12, 0.25);
@@ -65,30 +64,6 @@ function toInputValue(d: Date): string {
   const h = String(d.getHours()).padStart(2, "0");
   const min = String(d.getMinutes()).padStart(2, "0");
   return `${y}-${m}-${day}T${h}:${min}`;
-}
-
-function AppleTimeButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "rounded-xl px-3 py-2 text-sm font-medium transition-all",
-        active
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "bg-muted text-muted-foreground hover:bg-muted/80",
-      )}
-    >
-      {label}
-    </button>
-  );
 }
 
 export function ReminderList({
@@ -111,7 +86,6 @@ export function ReminderList({
   const firedRef = useRef<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Alarm checker
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
@@ -169,12 +143,6 @@ export function ReminderList({
   );
   const completed = reminders.filter((r) => r.status === "completed");
   const total = reminders.filter((r) => r.status !== "completed").length;
-
-  function quickTime(hoursFromNow: number) {
-    const d = new Date();
-    d.setHours(d.getHours() + hoursFromNow, 0, 0, 0);
-    return d;
-  }
 
   function submit() {
     const title = text.trim();
@@ -338,59 +306,57 @@ export function ReminderList({
                 </button>
               ))}
             </div>
+
             {/* Pendulum clock time picker */}
-            <div className="mb-5 flex flex-col items-center gap-2">
-              {/* Clock face */}
-              <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-[5px] border-foreground/15 bg-card shadow-[inset_0_2px_8px_rgba(0,0,0,0.06)]">
-                {/* Hour numbers */}
-                {[12,1,2,3,4,5,6,7,8,9,10,11].map((num) => {
-                  const angle = (num * 30 - 90) * Math.PI / 180;
-                  const r = 46;
-                  const x = 50 + r * Math.cos(angle);
-                  const y = 50 + r * Math.sin(angle);
-                  return (
-                    <span key={num} className="absolute text-[11px] font-bold text-foreground/60" style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }}>{num}</span>
-                  );
-                })}
-                {/* Hour hand */}
-                <div
-                  className="absolute left-1/2 top-[22%] h-7 w-[3.5px] -translate-x-1/2 rounded-full bg-foreground/80"
-                  style={{ transformOrigin: "bottom center", transform: `translateX(-50%) rotate(${(pickedDate.getHours() % 12) * 30 + pickedDate.getMinutes() * 0.5}deg)` }}
-                />
-                {/* Minute hand */}
-                <div
-                  className="absolute left-1/2 top-[18%] h-10 w-[2px] -translate-x-1/2 rounded-full bg-primary"
-                  style={{ transformOrigin: "bottom center", transform: `translateX(-50%) rotate(${pickedDate.getMinutes() * 6}deg)` }}
-                />
-                {/* Second hand */}
-                <div
-                  className="absolute left-1/2 top-[20%] h-9 w-[1px] -translate-x-1/2 rounded-full bg-destructive/70"
-                  style={{ transformOrigin: "bottom center", transform: `translateX(-50%) rotate(${pickedDate.getSeconds() * 6}deg)` }}
-                />
-                {/* Center cap */}
-                <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground shadow-sm" />
+            <div className="mb-5 flex flex-col items-center">
+              {/* Clock case */}
+              <div className="w-44 rounded-2xl border-2 border-foreground/15 bg-gradient-to-b from-foreground/5 to-transparent p-3 pb-2 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)]">
+                {/* Top ornament */}
+                <div className="mx-auto mb-2 h-2.5 w-2.5 rounded-full border-2 border-foreground/25" />
+                {/* Clock face */}
+                <div className="relative mx-auto flex h-28 w-28 items-center justify-center rounded-full border-[3px] border-foreground/15 bg-white dark:bg-white/90 shadow-[inset_0_2px_6px_rgba(0,0,0,0.08)]">
+                  {Array.from({ length: 12 }).map((num) => {
+                    const angle = (num * 30 - 90) * Math.PI / 180;
+                    const isMain = num % 3 === 0;
+                    const r = 46;
+                    const x = 50 + r * Math.cos(angle);
+                    const y = 50 + r * Math.sin(angle);
+                    return (
+                      <span key={num} className={`absolute font-bold ${isMain ? "text-[13px] text-foreground/80" : "text-[10px] text-foreground/40"}`} style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }}>{num}</span>
+                    );
+                  })}
+                  <div
+                    className="absolute left-1/2 top-[24%] h-6 w-[3px] -translate-x-1/2 rounded-full bg-foreground/80"
+                    style={{ transformOrigin: "bottom center", transform: `translateX(-50%) rotate(${(pickedDate.getHours() % 12) * 30 + pickedDate.getMinutes() * 0.5}deg)` }}
+                  />
+                  <div
+                    className="absolute left-1/2 top-[20%] h-9 w-[2px] -translate-x-1/2 rounded-full bg-foreground"
+                    style={{ transformOrigin: "bottom center", transform: `translateX(-50%) rotate(${pickedDate.getMinutes() * 6}deg)` }}
+                  />
+                  <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground" />
+                </div>
               </div>
 
-              {/* Pendulum — rod + bob */}
-              <div className="flex h-14 w-14 flex-col items-center">
+              {/* Pendulum */}
+              <div className="relative -mt-1 flex h-16 w-16 flex-col items-center justify-start overflow-visible">
                 <div className="pendulum-swing" style={{ transformOrigin: "top center" }}>
-                  <div className="mx-auto h-8 w-[2px] rounded-full bg-foreground/25" />
-                  <div className="mx-auto h-4 w-4 rounded-full bg-foreground/15 border border-foreground/20" />
+                  <div className="mx-auto h-7 w-[2px] rounded-full bg-foreground/30" />
+                  <div className="mx-auto h-3 w-3 rounded-full border-[1.5px] border-foreground/20 bg-foreground/5" />
                 </div>
               </div>
 
               {/* Time controls */}
-              <div className="flex items-center gap-5">
-                <div className="flex flex-col items-center gap-1">
-                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 1) % 24); return n; })} className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-foreground hover:bg-muted transition-colors">▲</button>
-                  <span className="h-11 w-14 flex items-center justify-center rounded-2xl bg-muted text-lg font-bold tabular-nums">{String(pickedDate.getHours()).padStart(2, "0")}</span>
-                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 23) % 24); return n; })} className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-foreground hover:bg-muted transition-colors">▼</button>
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center gap-0.5">
+                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 1) % 24); return n; })} className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-foreground hover:bg-muted transition-colors">▲</button>
+                  <span className="h-10 w-12 flex items-center justify-center rounded-xl bg-muted text-base font-bold tabular-nums">{String(pickedDate.getHours()).padStart(2, "0")}</span>
+                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 23) % 24); return n; })} className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-foreground hover:bg-muted transition-colors">▼</button>
                 </div>
-                <span className="text-xl font-bold text-foreground/30">:</span>
-                <div className="flex flex-col items-center gap-1">
-                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 5) % 60); return n; })} className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-foreground hover:bg-muted transition-colors">▲</button>
-                  <span className="h-11 w-14 flex items-center justify-center rounded-2xl bg-muted text-lg font-bold tabular-nums">{String(pickedDate.getMinutes()).padStart(2, "0")}</span>
-                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 55) % 60); return n; })} className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-foreground hover:bg-muted transition-colors">▼</button>
+                <span className="text-lg font-bold text-foreground/30">:</span>
+                <div className="flex flex-col items-center gap-0.5">
+                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 5) % 60); return n; })} className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-foreground hover:bg-muted transition-colors">▲</button>
+                  <span className="h-10 w-12 flex items-center justify-center rounded-xl bg-muted text-base font-bold tabular-nums">{String(pickedDate.getMinutes()).padStart(2, "0")}</span>
+                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 55) % 60); return n; })} className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-foreground hover:bg-muted transition-colors">▼</button>
                 </div>
               </div>
             </div>
