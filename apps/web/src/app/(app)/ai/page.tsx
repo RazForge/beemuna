@@ -106,6 +106,17 @@ export default function AIPage() {
     onError: (err) => toast.error(formatError(err)),
   });
 
+  // Auto-select first conversation or create one
+  useEffect(() => {
+    if (conversationsQuery.isLoading) return;
+    const convs = conversationsQuery.data ?? [];
+    if (convs.length > 0 && !activeConv) {
+      setActiveConv(convs[0].id);
+    } else if (convs.length === 0 && !activeConv && !createConv.isPending) {
+      createConv.mutate();
+    }
+  }, [conversationsQuery.data, conversationsQuery.isLoading, activeConv]);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [detailQuery.data?.messages.length, streamText, streaming]);
@@ -308,10 +319,8 @@ export default function AIPage() {
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
             {!activeConv && (
               <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/12">
-                  <Brain className="h-7 w-7 text-primary" />
-                </div>
-                <p className="text-sm">{t("start_conversation")}</p>
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-sm">Starting conversation…</p>
               </div>
             )}
 
@@ -392,7 +401,7 @@ export default function AIPage() {
                     handleSend();
                   }
                 }}
-                placeholder={activeConv ? t("ask_placeholder") : t("start_chat_first")}
+                placeholder={activeConv ? t("ask_placeholder") : "Type a message…"}
                 disabled={!activeConv}
                 rows={1}
                 className="h-10 md:h-11 max-h-[120px] flex-1 resize-none overflow-y-auto rounded-2xl border border-input bg-background px-3 md:px-4 py-2 md:py-2.5 text-[13px] md:text-sm focus-ring disabled:opacity-50"
