@@ -169,3 +169,27 @@
     scrollbar-width: none;
   }
 }
+
+/* Pendulum clock */
+@keyframes swing {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+@keyframes tick-right {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(6deg); }
+}
+@keyframes tick-left {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-6deg); }
+}
+.pendulum-swing {
+  animation: swing 1.5s ease-in-out infinite;
+  transform-origin: top center;
+}
+.clock-hand-hour {
+  transform-origin: bottom center;
+}
+.clock-hand-minute {
+  transform-origin: bottom center;
+}
