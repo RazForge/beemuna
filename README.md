@@ -1,64 +1,79 @@
+<![CDATA[<div align="center">
+
 # BE'EMUNA
 
-> **Your time. Your knowledge. Your direction.**
+**Your time. Your knowledge. Your direction.**
 
-BE'EMUNA is a full-stack personal operating system for productivity, journaling, knowledge management, and AI-powered assistance.
+A full-stack personal operating system for productivity, journaling, knowledge management, and AI-powered assistance — built with faith-aware design.
 
-## Live
+[![License: Private](https://img.shields.io/badge/License-Private-red)]()
+[![CI](https://github.com/RazForge/beemuna/actions/workflows/ci.yml/badge.svg)](https://github.com/RazForge/beemuna/actions)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
+[![Next.js 16](https://img.shields.io/badge/next.js-16-black)](https://nextjs.org)
 
-- **Frontend** — https://beemuna.vercel.app
-- **Backend API** — https://beemuna-production.up.railway.app/api/v1/docs
+[Live App](https://beemuna.vercel.app) · [API Docs](https://beemuna-production.up.railway.app/api/v1/docs)
+
+</div>
+
+---
+
+## What is BE'EMUNA?
+
+BE'EMUNA is a personal productivity platform that combines task management, journaling, knowledge base, and AI assistance into one unified experience. It supports **Gregorian, Ethiopian, and Hijri** calendars, and adapts its AI behavior based on the user's faith worldview.
 
 ## Features
 
-- **Projects & Tasks** — nested projects, tasks, and subtasks
-- **Goals & Milestones** — track outcomes and progress
-- **Habits** — habit tracking with per-day completions
-- **Journal** — private daily journaling with mood, tags, and media attachments
+### Productivity
+- **Projects & Tasks** — nested projects, tasks, and subtasks with priorities
+- **Goals & Milestones** — track outcomes and measure progress
+- **Habits** — daily habit tracking with streaks and completions
+- **Focus Mode** — Pomodoro-style focus sessions with background timer and completion sound
+
+### Knowledge & Reflection
+- **Journal** — private daily journaling with mood tracking, voice typing, and media attachments
 - **Notes** — rich notes with folder organization
-- **Calendar** — native **Gregorian + Ethiopian** support with Ge'ez numerals and Amharic month names, plus **Hijri** and faith-aware holiday helpers
-- **Focus & Timeline** — Pomodoro-style focus sessions and a life-timeline view
-- **Knowledge Base / RAG** — spaces, sources, document chunking, embeddings (pgvector), concepts, relationships, and citations
-- **AI Assistant** — NVIDIA cloud-powered conversational AI with conversation memory, application data context, worldview-aware system prompts, and streaming responses
-- **Reminders & Notifications** — schedule-aware reminders with quiet hours
-- **Faith Tools** — Bible-verse inspiration, faith-aware reminders and content
+- **Knowledge Base (RAG)** — spaces, sources, document chunking, embeddings (pgvector), concepts, relationships, and AI-powered citations
+
+### Intelligence
+- **AI Assistant** — NVIDIA cloud-powered conversational AI with streaming, conversation memory, and auto-extracted facts
+- **Auto-Memory** — the AI remembers important details from your conversations
+- **Application Data Context** — the AI knows about your tasks, journal entries, goals, and habits
+
+### Faith & Culture
+- **7 Worldviews** — Christian, Muslim, Jewish, Hindu, Buddhist, Secular, or Unspecified
+- **Faith-Aware AI** — system prompts adapt to your worldview
+- **Triple Calendar** — Gregorian, Ethiopian (with Ge'ez numerals), and Hijri support
+- **Prayer Times** — automatic calculation for Muslim users
+
+### System
+- **Reminders & Notifications** — schedule-aware with quiet hours
+- **Journey** — achievements, progress paths, and life score
+- **Mobile-First Design** — responsive across all devices
 
 ## Architecture
 
 ```
 beemuna/
 ├── apps/
-│   ├── web/                 Next.js 16 + TypeScript + Tailwind v4 frontend
-│   └── api/                 FastAPI + SQLAlchemy + Alembic backend
-├── workers/                 Python background workers (RQ + scheduler thread)
+│   ├── web/                    # Next.js 16 + TypeScript + Tailwind v4
+│   └── api/                    # FastAPI + SQLAlchemy + Alembic
+├── workers/                    # Background workers (RQ + scheduler)
 ├── infrastructure/
-│   └── docker/              Container definitions (Dockerfile)
-└── tests/                   Test assets
+│   └── docker/                 # Dockerfiles
+└── tests/
 ```
 
-## Stack
+## Tech Stack
 
-| Layer     | Tech |
-|-----------|------|
-| Backend   | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic v2 |
-| Database  | PostgreSQL 16 + pgvector (Supabase) |
-| Cache     | Upstash Redis |
-| Frontend  | Next.js 16, React 19, TypeScript 5, Tailwind CSS v4, TanStack Query, Radix UI |
-| Auth      | Argon2 password hashing, JWT (HS256), Google OAuth |
-| AI        | NVIDIA API (Llama 3.1 8B / 70B) with streaming |
-
-## Deployment
-
-| Service | Platform | URL |
-|---------|----------|-----|
-| Frontend | Vercel | https://beemuna.vercel.app |
-| Backend | Railway | https://beemuna-production.up.railway.app |
-| Database | Supabase | PostgreSQL + pgvector |
-| Cache | Upstash | Redis |
-
-- **Dockerfile** — Python 3.12-slim, runs Alembic migrations on startup, then Uvicorn
-- **Railway** — auto-deploys from GitHub (`RazForge/beemuna`, `main` branch)
-- **Vercel** — auto-deploys from GitHub
+| Layer | Tech |
+|-------|------|
+| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS v4, TanStack Query, Radix UI |
+| **Backend** | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic v2 |
+| **Database** | PostgreSQL 16 + pgvector |
+| **Cache** | Redis |
+| **Auth** | Argon2 hashing, JWT (HS256), Google OAuth |
+| **AI** | NVIDIA API (Llama 3.1 8B / 70B) with OpenAI-compatible client |
+| **Mobile** | Expo (React Native) — Android APK |
 
 ## Getting Started
 
@@ -68,11 +83,13 @@ beemuna/
 - Node.js 22+
 - Docker (for local Postgres + Redis)
 
-### 1. Configure environment
+### 1. Clone and configure
 
 ```bash
+git clone https://github.com/RazForge/beemuna.git
+cd beemuna
 cp .env.example .env
-# edit .env — set DATABASE_URL, NVIDIA_API_KEY, SECRET_KEY, etc.
+# Edit .env — set DATABASE_URL, SECRET_KEY, NVIDIA_API_KEY, etc.
 ```
 
 ### 2. Start infrastructure
@@ -81,7 +98,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Starts PostgreSQL on `:5432` and Redis on `:6379`.
+Starts PostgreSQL on `:5433` and Redis on `:6380`.
 
 ### 3. Run the API
 
@@ -95,7 +112,7 @@ uvicorn app.main:app --reload --port 8002 --timeout-keep-alive 300
 
 API docs at `http://localhost:8002/docs`.
 
-### 4. Run the web frontend
+### 4. Run the frontend
 
 ```bash
 cd apps/web
@@ -107,53 +124,65 @@ Open `http://localhost:3002`.
 
 ## Environment Variables
 
-| Variable | Purpose |
-|----------|---------|
-| `SECRET_KEY` | JWT signing secret |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `REDIS_URL` | Redis connection string |
-| `NVIDIA_API_KEY` | NVIDIA API key for cloud AI |
-| `AI_CLOUD_MODEL` | Cloud AI model (`meta/llama-3.1-8b-instruct` or `meta/llama-3.1-70b-instruct`) |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | Google OAuth redirect URI |
-| `NEXT_PUBLIC_API_URL` | Web → API base URL |
-| `NEXT_PUBLIC_APP_URL` | Web origin |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID (frontend) |
+```bash
+# Required
+SECRET_KEY=           # JWT signing secret (64-byte random hex)
+DATABASE_URL=         # PostgreSQL connection string
+REDIS_URL=            # Redis connection string
+NVIDIA_API_KEY=       # NVIDIA API key for cloud AI
+
+# Google OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=  # https://your-api.up.railway.app/api/v1/auth/google/callback
+
+# Frontend
+NEXT_PUBLIC_API_URL=  # https://your-api.up.railway.app/api/v1
+NEXT_PUBLIC_APP_URL=  # https://your-app.vercel.app
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=
+```
 
 ## API Surface
 
-Routers under `/api/v1`:
+All endpoints under `/api/v1`:
 
-`auth`, `projects`, `tasks`, `goals`, `journal`, `notes`, `habits`, `calendar`, `focus`, `timeline`, `knowledge`, `ai`, `reminders`, `health`
+| Router | Description |
+|--------|-------------|
+| `auth` | Registration, login, Google OAuth, password reset |
+| `projects` | Projects, tasks, subtasks, blocks |
+| `goals` | Goals and milestones |
+| `journal` | Journal entries with mood and media |
+| `notes` | Notes and folders |
+| `habits` | Habit tracking and completions |
+| `calendar` | Events and reminders |
+| `focus` | Focus sessions |
+| `knowledge` | Knowledge spaces, sources, embeddings, RAG search |
+| `ai` | Chat conversations, streaming, memories |
+| `journey` | Achievements, progress paths, life score |
+| `reminders` | Scheduled reminders with quiet hours |
+| `analytics` | Dashboard analytics |
 
-## Data Model
+## Deployment
 
-Key entities (SQLAlchemy models in `apps/api/app/models/`):
-
-- **Identity**: `User` (religion, calendar_mode, ai_access, auth_provider), `Session`
-- **Productivity**: `Project`, `Task`, `Subtask`, `Goal`, `Milestone`, `Habit`, `HabitCompletion`, `CalendarEvent`, `FocusSession`
-- **Content**: `JournalEntry`, `Note`, `NoteFolder`, `TimelineItem`
-- **Knowledge**: `KnowledgeSpace`, `Source`, `DocumentChunk`, `Embedding`, `Concept`, `Relationship`, `Citation`
-- **AI**: `AIConversation`, `AIMessage`, `AIMemory`
-- **System**: `Reminder`, `Notification`
-
-Migrations in `apps/api/alembic/versions/`.
+| Service | Platform | Status |
+|---------|----------|--------|
+| Frontend | Vercel | [beemuna.vercel.app](https://beemuna.vercel.app) |
+| Backend | Railway | [beemuna-production.up.railway.app](https://beemuna-production.up.railway.app) |
+| Database | Supabase | PostgreSQL 16 + pgvector |
+| Cache | Upstash | Redis |
 
 ## Security
 
 - Passwords hashed with **Argon2**
-- Identity derived from server-side auth context — never from client-supplied IDs
-- Every query enforces ownership
-- AI/RAG scoped by `user_id`
-- Journal content is **private by default** and never auto-fed to AI
+- Identity derived from server-side auth — never from client-supplied IDs
+- Every query enforces ownership (multi-tenant by design)
+- AI and RAG scoped by `user_id`
+- Journal content is **private by default** — never auto-fed to AI
 - CORS allow-list, rate limiting, secure session tokens
-
-## Test Account
-
-- Email: `test@razforge.com`
-- Password: `Test1234!`
+- All secrets excluded from git via `.gitignore`
+- No hardcoded credentials in source code
 
 ## License
 
-Private / proprietary.
+Private / proprietary. Contact [RazForge](https://github.com/RazForge) for access.
+]]>
