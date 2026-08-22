@@ -41,9 +41,56 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <span className="text-xl font-bold">B</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">BE&apos;EMUNA</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Your time. Your knowledge. Your direction.
-          </p>
+          <div className="mt-2 overflow-hidden">
+            <svg
+              className="mx-auto h-5 w-[280px]"
+              viewBox="0 0 280 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="shimmer" x1="-100%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity="0.4" />
+                  <stop offset="40%" stopColor="hsl(var(--muted-foreground))" stopOpacity="0.4" />
+                  <stop offset="50%" stopColor="hsl(var(--foreground))" stopOpacity="1" />
+                  <stop offset="60%" stopColor="hsl(var(--muted-foreground))" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity="0.4" />
+                  <animate
+                    attributeName="x1"
+                    from="-100%"
+                    to="200%"
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="x2"
+                    from="0%"
+                    to="300%"
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                </linearGradient>
+              </defs>
+              <text
+                x="140"
+                y="15"
+                textAnchor="middle"
+                className="fill-muted-foreground"
+                style={{ fontSize: "13px", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
+              >
+                Your time. Your knowledge. Your direction.
+              </text>
+              <text
+                x="140"
+                y="15"
+                textAnchor="middle"
+                fill="url(#shimmer)"
+                style={{ fontSize: "13px", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
+              >
+                Your time. Your knowledge. Your direction.
+              </text>
+            </svg>
+          </div>
         </motion.div>
         <PageMotion>{children}</PageMotion>
       </div>
