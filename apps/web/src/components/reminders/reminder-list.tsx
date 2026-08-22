@@ -339,50 +339,58 @@ export function ReminderList({
               ))}
             </div>
             {/* Pendulum clock time picker */}
-            <div className="mb-5 flex flex-col items-center gap-1">
+            <div className="mb-5 flex flex-col items-center gap-2">
               {/* Clock face */}
-              <div className="relative flex h-32 w-32 items-center justify-center rounded-full border-4 border-foreground/10 bg-card shadow-inner">
-                {/* Hour markers */}
-                {Array.from({ length: 12 }).map((_, i) => {
-                  const angle = (i * 30) * Math.PI / 180;
-                  const x = 48 + 42 * Math.sin(angle);
-                  const y = 48 - 42 * Math.cos(angle);
+              <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-[5px] border-foreground/15 bg-card shadow-[inset_0_2px_8px_rgba(0,0,0,0.06)]">
+                {/* Hour numbers */}
+                {[12,1,2,3,4,5,6,7,8,9,10,11].map((num) => {
+                  const angle = (num * 30 - 90) * Math.PI / 180;
+                  const r = 46;
+                  const x = 50 + r * Math.cos(angle);
+                  const y = 50 + r * Math.sin(angle);
                   return (
-                    <span key={i} className="absolute h-1.5 w-1.5 rounded-full bg-foreground/40" style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }} />
+                    <span key={num} className="absolute text-[11px] font-bold text-foreground/60" style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }}>{num}</span>
                   );
                 })}
                 {/* Hour hand */}
                 <div
-                  className="absolute left-1/2 top-1/2 h-8 w-[3px] -translate-x-1/2 -translate-y-full rounded-full bg-foreground clock-hand-hour"
-                  style={{ transform: `translateX(-50%) translateY(-100%) rotate(${(pickedDate.getHours() % 12) * 30}deg)`, transformOrigin: "bottom center" }}
+                  className="absolute left-1/2 top-[22%] h-7 w-[3.5px] -translate-x-1/2 rounded-full bg-foreground/80"
+                  style={{ transformOrigin: "bottom center", transform: `translateX(-50%) rotate(${(pickedDate.getHours() % 12) * 30 + pickedDate.getMinutes() * 0.5}deg)` }}
                 />
                 {/* Minute hand */}
                 <div
-                  className="absolute left-1/2 top-1/2 h-11 w-[2px] -translate-x-1/2 -translate-y-full rounded-full bg-primary clock-hand-minute"
-                  style={{ transform: `translateX(-50%) translateY(-100%) rotate(${pickedDate.getMinutes() * 6}deg)`, transformOrigin: "bottom center" }}
+                  className="absolute left-1/2 top-[18%] h-10 w-[2px] -translate-x-1/2 rounded-full bg-primary"
+                  style={{ transformOrigin: "bottom center", transform: `translateX(-50%) rotate(${pickedDate.getMinutes() * 6}deg)` }}
                 />
-                {/* Center dot */}
-                <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground" />
+                {/* Second hand */}
+                <div
+                  className="absolute left-1/2 top-[20%] h-9 w-[1px] -translate-x-1/2 rounded-full bg-destructive/70"
+                  style={{ transformOrigin: "bottom center", transform: `translateX(-50%) rotate(${pickedDate.getSeconds() * 6}deg)` }}
+                />
+                {/* Center cap */}
+                <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground shadow-sm" />
               </div>
-              {/* Pendulum */}
-              <div className="mt-1 flex h-10 w-10 items-start justify-center">
-                <div className="pendulum-swing">
-                  <div className="h-6 w-[2px] rounded-full bg-foreground/30" />
-                  <div className="mx-auto h-2.5 w-2.5 rounded-full bg-foreground/50" />
+
+              {/* Pendulum — rod + bob */}
+              <div className="flex h-14 w-14 flex-col items-center">
+                <div className="pendulum-swing" style={{ transformOrigin: "top center" }}>
+                  <div className="mx-auto h-8 w-[2px] rounded-full bg-foreground/25" />
+                  <div className="mx-auto h-4 w-4 rounded-full bg-foreground/15 border border-foreground/20" />
                 </div>
               </div>
+
               {/* Time controls */}
-              <div className="mt-2 flex items-center gap-4">
+              <div className="flex items-center gap-5">
                 <div className="flex flex-col items-center gap-1">
-                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 1) % 24); return n; })} className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-muted-foreground hover:bg-muted transition-colors">▲</button>
-                  <span className="h-10 w-12 flex items-center justify-center rounded-2xl bg-muted text-lg font-bold tabular-nums">{String(pickedDate.getHours()).padStart(2, "0")}</span>
-                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 23) % 24); return n; })} className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-muted-foreground hover:bg-muted transition-colors">▼</button>
+                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 1) % 24); return n; })} className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-foreground hover:bg-muted transition-colors">▲</button>
+                  <span className="h-11 w-14 flex items-center justify-center rounded-2xl bg-muted text-lg font-bold tabular-nums">{String(pickedDate.getHours()).padStart(2, "0")}</span>
+                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 23) % 24); return n; })} className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-foreground hover:bg-muted transition-colors">▼</button>
                 </div>
-                <span className="text-xl font-bold text-muted-foreground">:</span>
+                <span className="text-xl font-bold text-foreground/30">:</span>
                 <div className="flex flex-col items-center gap-1">
-                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 5) % 60); return n; })} className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-muted-foreground hover:bg-muted transition-colors">▲</button>
-                  <span className="h-10 w-12 flex items-center justify-center rounded-2xl bg-muted text-lg font-bold tabular-nums">{String(pickedDate.getMinutes()).padStart(2, "0")}</span>
-                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 55) % 60); return n; })} className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-muted-foreground hover:bg-muted transition-colors">▼</button>
+                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 5) % 60); return n; })} className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-foreground hover:bg-muted transition-colors">▲</button>
+                  <span className="h-11 w-14 flex items-center justify-center rounded-2xl bg-muted text-lg font-bold tabular-nums">{String(pickedDate.getMinutes()).padStart(2, "0")}</span>
+                  <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 55) % 60); return n; })} className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-foreground hover:bg-muted transition-colors">▼</button>
                 </div>
               </div>
             </div>
