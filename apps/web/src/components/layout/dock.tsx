@@ -210,10 +210,10 @@ export function Dock() {
             <Link
               key={href}
               href={href}
-            className={cn(
-              "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
-              isActive(href) ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
+              className={cn(
+                "relative flex flex-col items-center gap-0.5 rounded-full px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
+                isActive(href) ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
             >
               <Icon className="relative z-10 h-5 w-5" strokeWidth={isActive(href) ? 2.5 : 2} />
               <span className="relative z-10 leading-none">{t(labelKey)}</span>
@@ -224,7 +224,7 @@ export function Dock() {
           <button
             onClick={() => setShowNotifs(!showNotifs)}
             className={cn(
-              "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
+              "relative flex flex-col items-center gap-0.5 rounded-full px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
               showNotifs ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -241,7 +241,7 @@ export function Dock() {
           <button
             onClick={() => setShowMore(!showMore)}
             className={cn(
-              "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
+              "relative flex flex-col items-center gap-0.5 rounded-full px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
               showMore ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >

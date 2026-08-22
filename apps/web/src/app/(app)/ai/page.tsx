@@ -205,15 +205,7 @@ export default function AIPage() {
   return (
     <div className="mx-auto flex h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)] max-w-6xl flex-col gap-3 md:gap-4">
       {/* Header */}
-      <header className="relative rounded-3xl border border-white/40 dark:border-white/[0.08] p-3 md:p-6 shadow-[0_2px_20px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.4)]"
-        style={{
-          background: "rgba(255,255,255,0.65)",
-          backdropFilter: "blur(40px) saturate(180%)",
-        }}
-      >
-        <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
-          background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
-        }} />
+      <header className="rounded-3xl border border-border/50 bg-card p-3 md:p-6">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -279,7 +271,7 @@ export default function AIPage() {
           <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden" onClick={() => setShowSidebar(false)} />
         )}
         <div className={cn(
-          "space-y-1.5 overflow-y-auto rounded-2xl border border-border/50 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl p-2 shrink-0 shadow-lg shadow-black/[0.03] dark:shadow-black/20",
+          "space-y-1.5 overflow-y-auto rounded-2xl border border-border/50 bg-card p-2 shrink-0",
           "fixed md:relative inset-y-0 left-0 z-50 w-64 md:w-56 md:shrink-0 pt-16 md:pt-0 transition-transform duration-200",
           showSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}>
@@ -300,8 +292,8 @@ export default function AIPage() {
                   className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-2.5 text-left transition-colors"
                 >
                   <span className={cn(
-                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-colors",
-                    isActive ? "bg-primary/20" : "bg-white/40 dark:bg-white/[0.06] backdrop-blur-sm",
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
+                    isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
                   )}>
                     <MessageSquare className="h-4 w-4" />
                   </span>
@@ -328,7 +320,7 @@ export default function AIPage() {
           )}
         </div>
 
-        <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border/50 bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl shadow-lg shadow-black/[0.03] dark:shadow-black/20">
+        <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border/50 bg-card">
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
             {!activeConv && (
               <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
@@ -352,30 +344,13 @@ export default function AIPage() {
               <div key={m.id} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                 <div
                   className={cn(
-                    "relative max-w-[90%] md:max-w-[80%] rounded-3xl px-4 md:px-4 py-3 md:py-3 text-[13px] md:text-sm leading-relaxed",
+                    "max-w-[90%] md:max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[13px] md:text-sm leading-relaxed",
                     m.role === "user"
-                      ? "rounded-br-lg text-white shadow-[0_2px_16px_-2px_rgba(99,102,241,0.35)] border border-white/20"
-                      : "rounded-bl-lg shadow-[0_2px_20px_-4px_rgba(0,0,0,0.12)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.5)] border border-white/40 dark:border-white/[0.08]",
+                      ? "rounded-br-sm bg-primary text-primary-foreground"
+                      : "rounded-bl-sm bg-muted",
                   )}
-                  style={m.role === "user" ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.95), rgba(79,70,229,0.98))",
-                    backdropFilter: "blur(40px) saturate(180%)",
-                  } : {
-                    background: "rgba(255,255,255,0.72)",
-                    backdropFilter: "blur(40px) saturate(180%)",
-                  }}
                 >
-                  <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
-                    background: m.role === "user"
-                      ? "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 40%)"
-                      : "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
-                  }} />
-                  <div className="dark:hidden absolute inset-0 rounded-3xl pointer-events-none" style={{
-                    background: m.role === "user"
-                      ? "none"
-                      : "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 60%)",
-                  }} />
-                  <div className="relative z-10">
+                  <div>
                   {m.content ? (
                     <span dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
                   ) : m.status === "error" ? (
@@ -386,13 +361,13 @@ export default function AIPage() {
                     </span>
                   )}
                   {m.role === "assistant" && m.sources.length > 0 && (
-                    <div className="mt-2.5 space-y-1.5 border-t border-black/[0.08] dark:border-white/[0.1] pt-2.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="mt-2 space-y-1 border-t border-border/50 pt-2">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                         {t("sources")}
                       </p>
                       {m.sources.map((s, i) => (
-                        <div key={i} className="rounded-xl bg-white/50 dark:bg-white/[0.05] backdrop-blur-md p-2 border border-black/[0.05] dark:border-white/[0.08]">
-                          <p className="text-xs font-semibold">{s.source_title}</p>
+                        <div key={i} className="rounded-lg bg-muted p-1.5">
+                          <p className="text-xs font-medium">{s.source_title}</p>
                           <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{s.excerpt}</p>
                         </div>
                       ))}
@@ -405,19 +380,11 @@ export default function AIPage() {
 
             {streaming && (
               <div className="flex justify-start">
-                <div className="relative max-w-[80%] rounded-3xl rounded-bl-lg px-4 py-3 text-sm leading-relaxed border border-white/40 dark:border-white/[0.08] shadow-[0_2px_20px_-4px_rgba(0,0,0,0.12)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.5)]"
-                  style={{
-                    background: "rgba(255,255,255,0.72)",
-                    backdropFilter: "blur(40px) saturate(180%)",
-                  }}
-                >
-                  <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
-                    background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
-                  }} />
+                <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2.5 text-sm leading-relaxed">
                   {streamText ? (
-                    <span className="relative z-10" dangerouslySetInnerHTML={{ __html: renderMarkdown(streamText) }} />
+                    <span dangerouslySetInnerHTML={{ __html: renderMarkdown(streamText) }} />
                   ) : (
-                    <span className="relative z-10 flex items-center gap-2 text-muted-foreground">
+                    <span className="flex items-center gap-2 text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" /> {t("thinking")}
                     </span>
                   )}
@@ -426,7 +393,7 @@ export default function AIPage() {
             )}
           </div>
 
-          <div className="border-t border-border/50 bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl p-3 md:p-4 pb-6 md:pb-8 mb-2">
+          <div className="border-t border-border/50 p-3 md:p-4 pb-6 md:pb-8 mb-2">
             <div className="flex items-end gap-2">
               <textarea
                 value={draft}
@@ -444,16 +411,16 @@ export default function AIPage() {
                 placeholder={activeConv ? t("ask_placeholder") : "Type a message…"}
                 disabled={!activeConv}
                 rows={1}
-                className="h-10 md:h-11 max-h-[120px] flex-1 resize-none overflow-y-auto rounded-2xl border border-black/[0.06] dark:border-white/[0.1] bg-white/70 dark:bg-white/[0.05] backdrop-blur-md px-3 md:px-4 py-2 md:py-2.5 text-[13px] md:text-sm focus-ring disabled:opacity-50 shadow-sm"
+                className="h-10 md:h-11 max-h-[120px] flex-1 resize-none overflow-y-auto rounded-2xl border border-border bg-background px-3 md:px-4 py-2 md:py-2.5 text-[13px] md:text-sm focus-ring disabled:opacity-50"
               />
               {streaming ? (
-                <Button size="icon" className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl backdrop-blur-md" variant="outline" onClick={handleStop} title={t("stop")}>
+                <Button size="icon" className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl" variant="outline" onClick={handleStop} title={t("stop")}>
                   <span className="block h-3 w-3 rounded-[3px] bg-foreground" />
                 </Button>
               ) : (
                 <Button
                   size="icon"
-                  className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl shadow-lg shadow-primary/20 backdrop-blur-md"
+                  className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl"
                   disabled={!activeConv || !draft.trim()}
                   onClick={handleSend}
                 >
