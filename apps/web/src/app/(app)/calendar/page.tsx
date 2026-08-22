@@ -1,9 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
-import type { Reminder } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 import { useLang } from "@/lib/i18n";
 import { toEthiopian, toGeez, toGregorian, ETHIOPIAN_MONTHS_AM } from "@/lib/ethiopian";
@@ -15,7 +12,6 @@ import {
   type CalendarMode,
   type DayCell,
 } from "@/components/calendar/calendar-grid";
-import { ReminderList } from "@/components/reminders/reminder-list";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -26,7 +22,6 @@ function startOfDay(d: Date): Date {
 export default function CalendarPage() {
   const { user } = useAuth();
   const { t, locale, lang } = useLang();
-  const queryClient = useQueryClient();
   const religion = user?.religion ?? "christian";
 
   const today = useMemo(() => new Date(), []);
@@ -47,51 +42,6 @@ export default function CalendarPage() {
       ? `i-${todayHijri.year}-${todayHijri.month}-${todayHijri.day}`
       : `e-${todayEth.year}-${todayEth.month}-${todayEth.day}`,
   );
-
-  const remindersQuery = useQuery({
-    queryKey: ["reminders"],
-    queryFn: () => apiGet<Reminder[]>("/reminders"),
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: ({ id, done }: { id: string; done: boolean }) =>
-      apiPatch<Reminder>(`/reminders/${id}`, { status: done ? "completed" : "scheduled" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["reminders"] }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiDelete(`/reminders/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["reminders"] }),
-  });
-
-  const addMutation = useMutation({
-    mutationFn: ({ title, date }: { title: string; date: Date }) =>
-      apiPost<Reminder>("/reminders", {
-        type: "reminder",
-        title,
-        scheduled_at: date.toISOString(),
-        timezone: user?.timezone || "Africa/Addis_Ababa",
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["reminders"] }),
-  });
-
-  const reminders = remindersQuery.data ?? [];
-  const reminderCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const r of reminders) {
-      if (r.status === "completed") continue;
-      const d = new Date(r.scheduled_at);
-      const gKey = `g-${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-      map.set(gKey, (map.get(gKey) ?? 0) + 1);
-      const eth = toEthiopian(d);
-      const eKey = `e-${eth.year}-${eth.month}-${eth.day}`;
-      map.set(eKey, (map.get(eKey) ?? 0) + 1);
-      const h = toHijri(d);
-      const iKey = `i-${h.year}-${h.month}-${h.day}`;
-      map.set(iKey, (map.get(iKey) ?? 0) + 1);
-    }
-    return map;
-  }, [reminders]);
 
   const selectedDay = useMemo(() => {
     if (!selectedKey) return null;
@@ -157,15 +107,6 @@ export default function CalendarPage() {
       setView({ year: n.getFullYear(), month: n.getMonth() + 1 });
     }
   }
-
-  const dayReminders = useMemo(() => {
-    if (!selectedDay) return [];
-    const d0 = startOfDay(selectedDay);
-    return reminders.filter((r) => {
-      const d = startOfDay(new Date(r.scheduled_at));
-      return d.getTime() === d0.getTime();
-    });
-  }, [reminders, selectedDay]);
 
   const selectedEth = selectedDay ? toEthiopian(selectedDay) : null;
   const selectedHolidays = useMemo(() => {
@@ -307,7 +248,6 @@ export default function CalendarPage() {
           selectedKey={selectedKey}
           onSelectDay={selectDay}
           todayKey={todayKey}
-          reminderCounts={reminderCounts}
           religion={religion}
           locale={locale}
           lang={lang}
@@ -317,9 +257,6 @@ export default function CalendarPage() {
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-warning" /> {t("holiday")}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary/60" /> {t("reminder_dot")}
             </span>
           </div>
           <button
@@ -389,14 +326,6 @@ export default function CalendarPage() {
               ))}
             </div>
           )}
-          <ReminderList
-            reminders={dayReminders}
-            onToggle={(id, done) => toggleMutation.mutate({ id, done })}
-            onDelete={(id) => deleteMutation.mutate(id)}
-            onAdd={(title, date) => addMutation.mutate({ title, date })}
-            defaultDate={startOfDay(selectedDay)}
-            emptyText={t("nothing_scheduled")}
-          />
         </div>
       )}
     </div>
