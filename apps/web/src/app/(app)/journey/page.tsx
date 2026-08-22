@@ -282,7 +282,7 @@ export default function JourneyPage() {
         {tab === "achievements" && (
           <motion.div key="achievements" {...fade} className="space-y-6">
             {/* Summary */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 md:gap-3">
               <div className="rounded-2xl border border-border bg-card p-4 text-center">
                 <p className="text-2xl font-bold text-primary">{achievements.length}</p>
                 <p className="text-xs text-muted-foreground">Unlocked</p>
@@ -457,8 +457,8 @@ export default function JourneyPage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Overall Growth
               </p>
-              <div className="relative mx-auto mt-4 h-32 w-32">
-                <svg className="h-32 w-32 -rotate-90" viewBox="0 0 120 120">
+              <div className="relative mx-auto mt-4 h-24 w-24 md:h-32 md:w-32">
+                <svg className="h-24 w-24 md:h-32 md:w-32 -rotate-90" viewBox="0 0 120 120">
                   <circle
                     cx="60"
                     cy="60"

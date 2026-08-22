@@ -160,7 +160,7 @@ export default function KnowledgePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-4 md:gap-6 p-3 md:p-6">
       <header className="glass rounded-[28px] p-7 flex flex-wrap items-center justify-between gap-4 shadow-xl border-white/20 dark:border-white/5">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
@@ -267,7 +267,7 @@ export default function KnowledgePage() {
                 placeholder={t("kn_search_space")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 pl-8"
+                className="w-full md:w-64 pl-8"
               />
             </div>
           </div>

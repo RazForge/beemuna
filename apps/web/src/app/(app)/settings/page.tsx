@@ -357,7 +357,7 @@ const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
               ))}
             </datalist>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="settings-qh-start">{t("quiet_hours_start")}</Label>
               <Input id="settings-qh-start" type="time" value={quietStart} onChange={(e) => setQuietStart(e.target.value)} />

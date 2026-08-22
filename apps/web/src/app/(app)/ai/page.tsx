@@ -7,7 +7,7 @@ import { useLang } from "@/lib/i18n";
 import { formatError } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Plus, Send, Trash2, Sparkles, Brain, Loader2, MessageSquare, Settings } from "lucide-react";
+import { Plus, Send, Trash2, Sparkles, Brain, Loader2, MessageSquare, Settings, PanelLeft, X } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -60,6 +60,7 @@ export default function AIPage() {
   const [mode, setMode] = useState("assistant");
   const [spaceId, setSpaceId] = useState<string>("");
   const [draft, setDraft] = useState("");
+  const [showSidebar, setShowSidebar] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [streaming, setStreaming] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -191,36 +192,45 @@ export default function AIPage() {
   const messages = detailQuery.data?.messages ?? [];
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-6xl flex-col gap-4">
-      <header className="glass rounded-[28px] p-6 shadow-xl border-white/20 dark:border-white/5">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-                {t("ai_title")}
-              </h1>
-              <p className="text-muted-foreground mt-1 text-sm max-w-xl font-medium">
-                {t("ai_desc")}
-              </p>
+    <div className="mx-auto flex h-[calc(100vh-5rem)] md:h-[calc(100vh-4rem)] max-w-6xl flex-col gap-3 md:gap-4">
+      {/* Header */}
+      <header className="rounded-2xl border border-border bg-card p-3 md:p-6">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="md:hidden flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted"
+              >
+                {showSidebar ? <X className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
+              </button>
+              <div>
+                <h1 className="text-xl md:text-3xl font-extrabold tracking-tight">
+                  {t("ai_title")}
+                </h1>
+                <p className="text-muted-foreground mt-0.5 text-xs md:text-sm max-w-xl font-medium hidden md:block">
+                  {t("ai_desc")}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button size="sm" className="h-10 rounded-full px-5 shadow-md" onClick={() => createConv.mutate()}>
-                <Plus className="h-4 w-4 mr-1.5" /> {t("new_chat")}
+              <Button size="sm" className="h-9 md:h-10 rounded-full px-3 md:px-5 shadow-md text-xs md:text-sm" onClick={() => createConv.mutate()}>
+                <Plus className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" /> <span className="hidden sm:inline">{t("new_chat")}</span>
               </Button>
               <Link href="/ai/settings">
-                <Button size="icon" variant="outline" className="h-10 w-10 rounded-full" title={t("ai_settings")}>
+                <Button size="icon" variant="outline" className="h-9 w-9 md:h-10 md:w-10 rounded-full" title={t("ai_settings")}>
                   <Settings className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
             {modes.map((m) => (
               <button
                 key={m.value}
                 onClick={() => setMode(m.value)}
                 className={cn(
-                  "h-8 rounded-full px-4 text-xs font-semibold transition-all",
+                  "h-7 md:h-8 rounded-full px-2.5 md:px-4 text-[11px] md:text-xs font-semibold transition-all",
                   mode === m.value
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -229,11 +239,10 @@ export default function AIPage() {
                 {t(m.labelKey)}
               </button>
             ))}
-            <div className="ml-1 h-5 w-px bg-border" />
             <select
               value={spaceId}
               onChange={(e) => setSpaceId(e.target.value)}
-              className="h-8 rounded-full border border-black/10 bg-white/50 px-3 text-xs font-medium shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-black/20 focus:outline-none"
+              className="h-7 md:h-8 rounded-full border border-black/10 bg-white/50 px-2 md:px-3 text-[11px] md:text-xs font-medium shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-black/20 focus:outline-none"
             >
               <option value="" className="bg-card text-foreground">{t("no_knowledge_space")}</option>
               {spacesQuery.data?.map((s) => (
@@ -244,8 +253,17 @@ export default function AIPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 gap-4 overflow-hidden">
-        <div className="w-56 shrink-0 space-y-1.5 overflow-y-auto rounded-2xl border border-border bg-card p-2">
+      {/* Chat area */}
+      <div className="flex flex-1 gap-3 md:gap-4 overflow-hidden relative">
+        {/* Sidebar - mobile overlay */}
+        {showSidebar && (
+          <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden" onClick={() => setShowSidebar(false)} />
+        )}
+        <div className={cn(
+          "space-y-1.5 overflow-y-auto rounded-2xl border border-border bg-card p-2 shrink-0",
+          "fixed md:relative inset-y-0 left-0 z-50 w-64 md:w-56 md:shrink-0 pt-16 md:pt-0 transition-transform duration-200",
+          showSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        )}>
           {conversationsQuery.data?.map((conv) => {
             const isActive = conv.id === activeConv;
             return (
@@ -257,7 +275,7 @@ export default function AIPage() {
                 )}
               >
                 <button
-                  onClick={() => setActiveConv(conv.id)}
+                  onClick={() => { setActiveConv(conv.id); setShowSidebar(false); }}
                   className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-2 text-left"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -312,7 +330,7 @@ export default function AIPage() {
               <div key={m.id} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed",
+                    "max-w-[90%] md:max-w-[80%] rounded-2xl px-3 md:px-3.5 py-2 md:py-2.5 text-[13px] md:text-sm leading-relaxed",
                     m.role === "user"
                       ? "rounded-br-sm bg-primary text-primary-foreground"
                       : "rounded-bl-sm bg-muted",
@@ -359,8 +377,8 @@ export default function AIPage() {
             )}
           </div>
 
-          <div className="border-t border-border p-4">
-            <div className="flex items-center gap-2">
+          <div className="border-t border-border p-3 md:p-4">
+            <div className="flex items-end gap-2">
               <textarea
                 value={draft}
                 onChange={(e) => {
@@ -377,16 +395,16 @@ export default function AIPage() {
                 placeholder={activeConv ? t("ask_placeholder") : t("start_chat_first")}
                 disabled={!activeConv}
                 rows={1}
-                className="h-11 max-h-[120px] flex-1 resize-none overflow-y-auto rounded-2xl border border-input bg-background px-4 py-2.5 text-sm focus-ring disabled:opacity-50"
+                className="h-10 md:h-11 max-h-[120px] flex-1 resize-none overflow-y-auto rounded-2xl border border-input bg-background px-3 md:px-4 py-2 md:py-2.5 text-[13px] md:text-sm focus-ring disabled:opacity-50"
               />
               {streaming ? (
-                <Button size="icon" className="h-11 w-11 shrink-0 rounded-2xl" variant="outline" onClick={handleStop} title={t("stop")}>
+                <Button size="icon" className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl" variant="outline" onClick={handleStop} title={t("stop")}>
                   <span className="block h-3 w-3 rounded-[3px] bg-foreground" />
                 </Button>
               ) : (
                 <Button
                   size="icon"
-                  className="h-11 w-11 shrink-0 rounded-2xl"
+                  className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl"
                   disabled={!activeConv || !draft.trim()}
                   onClick={handleSend}
                 >
