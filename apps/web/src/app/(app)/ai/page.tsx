@@ -203,7 +203,7 @@ export default function AIPage() {
   const messages = detailQuery.data?.messages ?? [];
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)] max-w-6xl flex-col gap-3 md:gap-4">
+    <div className="mx-auto flex h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)] max-w-6xl flex-col gap-3 md:gap-4">
       {/* Header */}
       <header className="rounded-2xl border border-border/50 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl p-3 md:p-6 shadow-lg shadow-black/[0.03] dark:shadow-black/20">
         <div className="flex flex-col gap-3">
@@ -391,7 +391,7 @@ export default function AIPage() {
             )}
           </div>
 
-          <div className="border-t border-border/50 bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl p-3 md:p-4 pb-4 md:pb-5">
+          <div className="border-t border-border/50 bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl p-3 md:p-4 pb-6 md:pb-8 mb-2">
             <div className="flex items-end gap-2">
               <textarea
                 value={draft}
