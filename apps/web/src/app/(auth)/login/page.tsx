@@ -40,19 +40,26 @@ export default function LoginPage() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.1 }}
+      className="mx-auto w-full max-w-sm"
     >
-      <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-lg font-bold text-primary-foreground">
+          B
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>
+      </div>
+
+      <div className="space-y-4">
         <GoogleAuthButton />
 
-        <div className="my-6 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            or
-          </span>
+          <span className="text-xs text-muted-foreground">or</span>
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="email" className="text-sm font-medium">
               {t("email")}
@@ -87,14 +94,14 @@ export default function LoginPage() {
             {t("sign_in")}
           </Button>
         </form>
-
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          {t("no_account")}{" "}
-          <Link href="/register" className="font-semibold text-primary hover:underline">
-            {t("register")}
-          </Link>
-        </p>
       </div>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        {t("no_account")}{" "}
+        <Link href="/register" className="font-semibold text-primary hover:underline">
+          {t("register")}
+        </Link>
+      </p>
     </motion.div>
   );
 }
