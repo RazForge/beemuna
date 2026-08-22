@@ -33,9 +33,9 @@ class Settings(BaseSettings):
         "http://0.0.0.0:3003",
     ]
 
-    # AI
-    ai_provider: str = "ollama"
-    ai_model: str = "llama3.1"
+    # AI Provider — BEEMUNA AI Gateway
+    ai_provider: str = "gemini"
+    ai_model: str = "gemini-3.1-flash-lite"
     ai_base_url: str = ""
     ai_api_key: str = ""
     ollama_url: str = "http://localhost:11434"
@@ -43,14 +43,21 @@ class Settings(BaseSettings):
     ollama_num_ctx: int = 1024
     ollama_num_batch: int = 512
     ollama_num_threads: int = 6
-    embedding_provider: str = "ollama"
+    embedding_provider: str = "openai_compatible"
     embedding_model: str = "nomic-embed-text"
     embedding_dimensions: int = 768
     openai_api_key: str = ""
 
-    # NVIDIA Cloud AI
+    # Gemini (Primary + Reasoning)
+    gemini_api_key: str = ""
+    gemini_primary_model: str = "gemini-3.1-flash-lite"
+    gemini_reasoning_model: str = "gemini-2.5-flash"
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+
+    # NVIDIA Cloud AI (Fallback + Multimodal)
     nvidia_api_key: str = ""
-    nvidia_model: str = "meta/llama-3.1-8b-instruct"
+    nvidia_fallback_model: str = "glm-5.2"
+    nvidia_multimodal_model: str = "nemotron-3-nano-omni-30b-a3b-reasoning"
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
 
     # Storage

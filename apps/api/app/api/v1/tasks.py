@@ -1,14 +1,29 @@
 import uuid
 from datetime import UTC, datetime
+import random
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session as OrmSession
+from sqlalchemy import func
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
-from app.models.productivity import Subtask, Task
+from app.models.productivity import Task, Subtask, FocusSession
 from app.models.user import User
-from app.schemas.productivity import SubtaskIn, SubtaskOut, SubtaskUpdate, TaskIn, TaskOut, TaskUpdate
+from app.schemas.productivity import (
+    SubtaskIn,
+    SubtaskOut,
+    SubtaskUpdate,
+    TaskBreakdownIn,
+    TaskBreakdownOut,
+    TaskIn,
+    TaskOut,
+    TaskUpdate,
+    DependencyIn,
+    HealthUpdateIn,
+    FocusRecordIn,
+)
+from app.services.ai_service import chat_completion
 from app.services.timeline_service import add_timeline_item
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -200,3 +215,115 @@ def delete_subtask(
         raise HTTPException(status_code=404, detail="Subtask not found")
     db.delete(subtask)
     db.commit()
+
+
+# ── Productivity Engine 2.0 ───────────────────────────────────────────────────
+
+@router.post("/{task_id}/breakdown", response_model=TaskBreakdownOut)
+def generate_breakdown(
+    task_id: uuid.UUID,
+    payload: TaskBreakdownIn,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> TaskBreakdownOut:
+    task = _get_task(db, task_id, user)
+    prompt = (
+        f"Break down this task into 3-5 actionable subtasks. Return ONLY a JSON array of subtask descriptions.\n\n"
+        f"Task: {task.title}\n"
+        f"Description: {task.description or 'None'}\n"
+        f"Context: {payload.context or 'None'}\n\n"
+        f"Example: [\"Research requirements\", \"Draft plan\", \"Implement solution\"]"
+    )
+    messages = [{"role": "user", "content": prompt}]
+    try:
+        reply = chat_completion(messages, temperature=0.3)
+    except Exception:
+        reply = (
+            "[Research and gather requirements, "
+            "Plan and outline the approach, "
+            "Implement the first part, "
+            "Review and refine the work]"
+        )
+
+    subtasks_str = reply.strip()
+    if subtasks_str.startswith("```"):
+        subtasks_str = subtasks_str.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+
+    try:
+        subtasks = eval(subtasks_str)
+        if not isinstance(subtasks, list):
+            subtasks = [subtasks_str]
+    except Exception:
+        subtasks = [s.strip() for s in subtasks_str.split(",") if s.strip()]
+
+    task.ai_breakdown = subtasks[:5]
+    db.commit()
+    db.refresh(task)
+    return TaskBreakdownOut(task_id=task.id, subtasks=task.ai_breakdown)
+
+
+@router.post("/{task_id}/dependencies", response_model=TaskOut)
+def set_dependency(
+    task_id: uuid.UUID,
+    payload: DependencyIn,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Task:
+    task = _get_task(db, task_id, user)
+    if payload.depends_on_task_id == task_id:
+        raise HTTPException(status_code=400, detail="Task cannot depend on itself")
+    dependency = db.query(Task).filter(
+        Task.id == payload.depends_on_task_id,
+        Task.user_id == user.id,
+    ).first()
+    if not dependency:
+        raise HTTPException(status_code=404, detail="Dependency task not found")
+    task.depends_on_task_id = payload.depends_on_task_id
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+@router.delete("/{task_id}/dependencies", response_model=TaskOut)
+def remove_dependency(
+    task_id: uuid.UUID,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Task:
+    task = _get_task(db, task_id, user)
+    task.depends_on_task_id = None
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+@router.patch("/{task_id}/health", response_model=TaskOut)
+def update_health_status(
+    task_id: uuid.UUID,
+    payload: HealthUpdateIn,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Task:
+    task = _get_task(db, task_id, user)
+    task.health_status = payload.health_status
+    if payload.health_status == "completed" and task.status != "done":
+        task.status = "done"
+        task.completed_at = datetime.now(UTC)
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+@router.post("/{task_id}/focus", response_model=TaskOut)
+def record_focus_session(
+    task_id: uuid.UUID,
+    payload: FocusRecordIn,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Task:
+    task = _get_task(db, task_id, user)
+    task.focus_session_count = (task.focus_session_count or 0) + 1
+    task.total_focus_minutes = (task.total_focus_minutes or 0) + payload.minutes
+    db.commit()
+    db.refresh(task)
+    return task

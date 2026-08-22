@@ -5,6 +5,7 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -70,13 +71,23 @@ class Task(UUIDMixin, TimestampMixin, Base):
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
-    priority: Mapped[str] = mapped_column(String(12), default="medium")
-    status: Mapped[str] = mapped_column(String(16), default="inbox")
+    priority: Mapped[str] = mapped_column(String(12), default="medium", index=True)
+    status: Mapped[str] = mapped_column(String(16), default="inbox", index=True)
+    health_status: Mapped[str | None] = mapped_column(String(24), default=None, index=True)
+    difficulty: Mapped[str | None] = mapped_column(String(16), default=None)
+    estimated_minutes: Mapped[int | None] = mapped_column(Integer)
+    actual_minutes: Mapped[int | None] = mapped_column(Integer)
+    accuracy_percent: Mapped[float | None] = mapped_column(Float, default=None)
+    depends_on_task_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("tasks.id", ondelete="SET NULL"), index=True, nullable=True
+    )
+    focus_session_count: Mapped[int] = mapped_column(Integer, default=0)
+    total_focus_minutes: Mapped[int] = mapped_column(Integer, default=0)
+    ai_breakdown: Mapped[list | None] = mapped_column(JSONB, default=None)
+    life_area: Mapped[str | None] = mapped_column(String(32), default=None, index=True)
     due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     recurrence_rule: Mapped[str | None] = mapped_column(String(128))
-    estimated_minutes: Mapped[int | None] = mapped_column(Integer)
-    actual_minutes: Mapped[int | None] = mapped_column(Integer)
     tags: Mapped[list] = mapped_column(JSONB, default=list)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -84,6 +95,9 @@ class Task(UUIDMixin, TimestampMixin, Base):
     project: Mapped["Project | None"] = relationship(back_populates="tasks")
     subtasks: Mapped[list["Subtask"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
+    )
+    depends_on: Mapped["Task | None"] = relationship(
+        remote_side="Task.id",
     )
 
 
@@ -115,10 +129,19 @@ class Goal(UUIDMixin, TimestampMixin, Base):
     )
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
+    goal_type: Mapped[str] = mapped_column(String(24), default="personal", index=True)
     status: Mapped[str] = mapped_column(String(16), default="active")
     target_date: Mapped[date | None] = mapped_column(Date, index=True)
     start_date: Mapped[date | None] = mapped_column(Date)
+    progress_percent: Mapped[int] = mapped_column(Integer, default=0)
+    confidence_score: Mapped[float | None] = mapped_column(Float, default=None)
+    risk_status: Mapped[str | None] = mapped_column(String(24), default=None)
+    expected_completion: Mapped[date | None] = mapped_column(Date)
+    last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    review_frequency: Mapped[str | None] = mapped_column(String(16), default="weekly")
+    ai_summary: Mapped[str | None] = mapped_column(Text)
     milestone_thresholds: Mapped[list] = mapped_column(JSONB, default=list)
+    life_area: Mapped[str | None] = mapped_column(String(32), default=None, index=True)
 
     milestones: Mapped[list["Milestone"]] = relationship(
         back_populates="goal", cascade="all, delete-orphan"
@@ -223,6 +246,15 @@ class Habit(UUIDMixin, TimestampMixin, Base):
     reminder_time: Mapped[str | None] = mapped_column(String(5))
     color: Mapped[str | None] = mapped_column(String(16))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    stage: Mapped[str | None] = mapped_column(String(24), default="new", index=True)
+    strength_score: Mapped[float | None] = mapped_column(Float, default=None)
+    current_streak: Mapped[int] = mapped_column(Integer, default=0)
+    longest_streak: Mapped[int] = mapped_column(Integer, default=0)
+    identity_label: Mapped[str | None] = mapped_column(String(200), default=None)
+    chain_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("habit_chains.id", ondelete="SET NULL"), index=True, nullable=True
+    )
+    life_area: Mapped[str | None] = mapped_column(String(32), default=None, index=True)
 
     completions: Mapped[list["HabitCompletion"]] = relationship(
         back_populates="habit", cascade="all, delete-orphan"
@@ -242,6 +274,55 @@ class HabitCompletion(UUIDMixin, TimestampMixin, Base):
     completed_on: Mapped[date] = mapped_column(Date, index=True, nullable=False)
 
     habit: Mapped["Habit"] = relationship(back_populates="completions")
+
+
+class HabitChain(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "habit_chains"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    icon: Mapped[str | None] = mapped_column(String(16))
+    bonus_multiplier: Mapped[float] = mapped_column(Float, default=1.0)
+
+    habits: Mapped[list["Habit"]] = relationship()
+
+
+class WeeklyReview(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "weekly_reviews"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    week_start: Mapped[date] = mapped_column(Date, index=True, nullable=False)
+    week_end: Mapped[date] = mapped_column(Date, nullable=False)
+    tasks_completed: Mapped[int] = mapped_column(Integer, default=0)
+    goals_advanced: Mapped[int] = mapped_column(Integer, default=0)
+    habit_completion_pct: Mapped[float | None] = mapped_column(Float, default=None)
+    focus_hours: Mapped[float | None] = mapped_column(Float, default=None)
+    achievements_earned: Mapped[int] = mapped_column(Integer, default=0)
+    momentum_score: Mapped[float | None] = mapped_column(Float, default=None)
+    ai_summary: Mapped[str | None] = mapped_column(Text)
+    blockers: Mapped[str | None] = mapped_column(Text)
+    wins: Mapped[str | None] = mapped_column(Text)
+    lessons: Mapped[str | None] = mapped_column(Text)
+
+
+class GoalReview(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "goal_reviews"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    goal_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("goals.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    notes: Mapped[str | None] = mapped_column(Text)
+    rating: Mapped[int | None] = mapped_column(Integer)
+
+    goal: Mapped["Goal"] = relationship()
 
 
 class CalendarEvent(UUIDMixin, TimestampMixin, Base):

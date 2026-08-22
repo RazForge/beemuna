@@ -148,47 +148,66 @@ async def _nvidia_chat_stream(model: str, messages: list[dict], temperature: flo
         yield chunk
 
 
+def _gemini_chat(model: str, messages: list[dict], temperature: float = 0.7) -> str:
+    """Chat via Gemini API (non-streaming)."""
+    return _openai_chat(
+        model, messages, temperature,
+        base_url=f"{settings.gemini_base_url}/openai",
+        api_key=settings.gemini_api_key or settings.ai_api_key,
+    )
+
+
+async def _gemini_chat_stream(model: str, messages: list[dict], temperature: float = 0.7):
+    """Stream from Gemini API."""
+    async for chunk in _openai_chat_stream(
+        model, messages, temperature,
+        base_url=f"{settings.gemini_base_url}/openai",
+        api_key=settings.gemini_api_key or settings.ai_api_key,
+    ):
+        yield chunk
+
+
+def _route_model(mode: str = "default") -> tuple[str, str]:
+    """Return (provider, model) based on routing mode."""
+    gemini_key = settings.gemini_api_key or settings.ai_api_key
+    if mode == "reasoning":
+        return ("gemini", settings.gemini_reasoning_model)
+    if mode == "multimodal":
+        return ("nvidia", settings.nvidia_multimodal_model)
+    if not gemini_key:
+        return ("nvidia", settings.nvidia_fallback_model)
+    return ("gemini", settings.gemini_primary_model)
+
+
 def chat_completion(
     messages: list[dict], provider: str | None = None,
     model: str | None = None, temperature: float = 0.7,
-    base_url: str | None = None,
+    base_url: str | None = None, mode: str = "default",
 ) -> str:
     provider = provider or settings.ai_provider
     model = model or settings.ai_model
     errors: list[str] = []
 
-    candidates: list[tuple[str, str]] = []
-    if provider == "anthropic":
-        candidates = [("anthropic", model)]
-    elif provider in ("gemini", "gemini-compatible"):
-        candidates = [("gemini", model)]
-    elif provider in ("openai", "openai-compatible"):
-        candidates = [("openai", model)]
+    # Smart routing
+    if provider in ("auto", "gemini"):
+        primary, primary_model = _route_model(mode)
+        fallback_prov = "nvidia" if primary == "gemini" else "gemini"
+        fallback_model = settings.nvidia_fallback_model if primary == "gemini" else settings.gemini_primary_model
+        candidates: list[tuple[str, str]] = [(primary, primary_model)]
+        if primary != fallback_prov:
+            candidates.append((fallback_prov, fallback_model))
     elif provider == "nvidia":
-        candidates = [("nvidia", model)]
+        candidates = [("nvidia", model or settings.nvidia_fallback_model)]
     else:
-        candidates = [("ollama", model)]
-
-    fallback_model = settings.ai_model or "qwen2.5-coder:3b"
-    if provider != "ollama":
-        candidates.append(("ollama", fallback_model))
-    if provider != "nvidia" and settings.nvidia_api_key:
-        candidates.append(("nvidia", settings.nvidia_model))
+        candidates = [("gemini", settings.gemini_primary_model)]
 
     for prov, mdl in candidates:
         try:
-            if prov == "ollama":
-                return _ollama_chat(mdl, messages, temperature, base_url)
+            if prov == "gemini":
+                return _gemini_chat(mdl, messages, temperature)
             if prov == "nvidia":
                 return _nvidia_chat(mdl, messages, temperature)
-            if prov == "anthropic":
-                return _anthropic_chat(mdl, messages, temperature)
-            if prov == "gemini":
-                return _openai_chat(
-                    mdl, messages, temperature,
-                    base_url="https://generativelanguage.googleapis.com/v1beta/openai",
-                )
-            return _openai_chat(mdl, messages, temperature)
+            return _ollama_chat(mdl, messages, temperature, base_url)
         except Exception as exc:
             errors.append(f"{prov}/{mdl}: {exc}")
 
@@ -198,70 +217,57 @@ def chat_completion(
 async def chat_completion_stream(
     messages: list[dict], provider: str | None = None,
     model: str | None = None, temperature: float = 0.7,
-    base_url: str | None = None,
+    base_url: str | None = None, mode: str = "default",
 ):
-    """Yield answer tokens as they arrive. Supports true streaming for Ollama, OpenAI, and Anthropic."""
+    """Yield answer tokens as they arrive. Gemini primary → NVIDIA fallback."""
     provider = provider or settings.ai_provider
     model = model or settings.ai_model
+    errors: list[str] = []
 
-    if provider == "ollama":
+    if provider in ("auto", "gemini"):
+        primary, primary_model = _route_model(mode)
+        fallback_prov = "nvidia" if primary == "gemini" else "gemini"
+        fallback_model = settings.nvidia_fallback_model if primary == "gemini" else settings.gemini_primary_model
+        candidates: list[tuple[str, str]] = [(primary, primary_model)]
+        if primary != fallback_prov:
+            candidates.append((fallback_prov, fallback_model))
+    elif provider == "nvidia":
+        candidates = [("nvidia", model or settings.nvidia_fallback_model)]
+    else:
+        candidates = [("gemini", settings.gemini_primary_model)]
+
+    for prov, mdl in candidates:
         try:
-            async for chunk in _ollama_chat_stream(model, messages, temperature, base_url):
+            if prov == "gemini":
+                async for chunk in _gemini_chat_stream(mdl, messages, temperature):
+                    yield chunk
+                return
+            if prov == "nvidia":
+                async for chunk in _nvidia_chat_stream(mdl, messages, temperature):
+                    yield chunk
+                return
+            async for chunk in _ollama_chat_stream(mdl, messages, temperature, base_url):
                 yield chunk
             return
         except Exception as exc:
-            logger.warning("Ollama streaming failed: %s", exc)
+            errors.append(f"{prov}/{mdl}: {exc}")
 
-    if provider in ("openai", "openai-compatible", "gemini", "gemini-compatible"):
-        try:
-            _base = base_url
-            if provider in ("gemini", "gemini-compatible"):
-                _base = "https://generativelanguage.googleapis.com/v1beta/openai"
-            async for chunk in _openai_chat_stream(model, messages, temperature, _base):
-                yield chunk
-            return
-        except Exception as exc:
-            logger.warning("OpenAI streaming failed: %s", exc)
-
-    if provider == "nvidia":
-        try:
-            async for chunk in _nvidia_chat_stream(model, messages, temperature):
-                yield chunk
-            return
-        except Exception as exc:
-            logger.warning("NVIDIA streaming failed: %s", exc)
-
-    if provider == "anthropic":
-        try:
-            async for chunk in _anthropic_chat_stream(model, messages, temperature):
-                yield chunk
-            return
-        except Exception as exc:
-            logger.warning("Anthropic streaming failed: %s", exc)
-
-    # Fallback: one-shot with local model if cloud model was tried
-    fallback_model = settings.ai_model or "qwen2.5-coder:3b"
-    full = chat_completion(messages, "ollama", fallback_model, temperature)
-    if full:
-        yield full
+    yield "AI providers unavailable. Please try again later."
 
 
 def provider_status() -> dict[str, Any]:
+    gemini_key = settings.gemini_api_key or settings.ai_api_key
     providers: dict[str, Any] = {
         "active_provider": settings.ai_provider,
-        "model": settings.ai_model,
-        "ollama_configured": bool(settings.ollama_url),
-        "openai_configured": bool(settings.openai_api_key or settings.ai_api_key),
-        "anthropic_configured": False,
-        "gemini_configured": False,
+        "primary_model": settings.gemini_primary_model,
+        "reasoning_model": settings.gemini_reasoning_model,
+        "fallback_model": settings.nvidia_fallback_model,
+        "multimodal_model": settings.nvidia_multimodal_model,
+        "gemini_configured": bool(gemini_key),
         "nvidia_configured": bool(settings.nvidia_api_key),
+        "ollama_configured": bool(settings.ollama_url),
+        "fallback_chain": "gemini → nvidia" if settings.nvidia_api_key else "gemini only",
     }
-    if settings.ai_provider == "anthropic":
-        providers["anthropic_configured"] = bool(settings.ai_api_key)
-    if settings.ai_provider in ("gemini", "gemini-compatible"):
-        providers["gemini_configured"] = bool(settings.ai_api_key)
-    if settings.ai_provider == "nvidia":
-        providers["nvidia_configured"] = bool(settings.nvidia_api_key)
 
     ollama_up = False
     try:

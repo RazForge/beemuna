@@ -6,9 +6,21 @@ from sqlalchemy.orm import Session as OrmSession
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
-from app.models.productivity import Goal, Milestone
+from app.models.productivity import Goal, GoalReview, Milestone
 from app.models.user import User
-from app.schemas.productivity import GoalIn, GoalOut, GoalUpdate, MilestoneIn, MilestoneOut, MilestoneUpdate
+from app.schemas.productivity import (
+    GoalConfidenceUpdateIn,
+    GoalIn,
+    GoalOut,
+    GoalReviewIn,
+    GoalReviewOut,
+    GoalUpdate,
+    MilestoneIn,
+    MilestoneOut,
+    ProgressUpdateIn,
+    MilestoneUpdate,
+)
+from app.services.ai_service import chat_completion
 from app.services.timeline_service import add_timeline_item
 
 router = APIRouter(prefix="/goals", tags=["goals"])
@@ -173,3 +185,58 @@ def delete_milestone(
         raise HTTPException(status_code=404, detail="Milestone not found")
     db.delete(milestone)
     db.commit()
+
+
+# ── Productivity Engine 2.0 ───────────────────────────────────────────────────
+
+@router.patch("/{goal_id}/confidence", response_model=GoalOut)
+def update_confidence(
+    goal_id: uuid.UUID,
+    payload: GoalConfidenceUpdateIn,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Goal:
+    goal = _get_goal(db, goal_id, user)
+    goal.confidence_score = payload.confidence_score
+    db.commit()
+    db.refresh(goal)
+    return goal
+
+
+@router.post("/{goal_id}/review", response_model=GoalReviewOut, status_code=201)
+def create_review(
+    goal_id: uuid.UUID,
+    payload: GoalReviewIn,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    from app.models.productivity import GoalReview
+    from app.schemas.productivity import GoalReviewOut
+
+    goal = _get_goal(db, goal_id, user)
+    review = GoalReview(
+        goal_id=goal.id,
+        user_id=user.id,
+        notes=payload.notes,
+        rating=payload.rating,
+    )
+    goal.last_reviewed_at = datetime.now(UTC)
+    db.add(review)
+    db.flush()
+    db.commit()
+    db.refresh(review)
+    return GoalReviewOut.model_validate(review)
+
+
+@router.patch("/{goal_id}/progress", response_model=GoalOut)
+def update_progress(
+    goal_id: uuid.UUID,
+    payload: ProgressUpdateIn,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Goal:
+    goal = _get_goal(db, goal_id, user)
+    goal.progress_percent = payload.progress_percent
+    db.commit()
+    db.refresh(goal)
+    return goal

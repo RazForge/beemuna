@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from app.api.v1 import ai, ai_setup, analytics, auth, calendar, focus, goals, habits, journal, journey, knowledge, notes, prayer, projects, reminders, tasks, timeline
+from app.api.v1 import ai, ai_setup, analytics, auth, calendar, focus, goals, habits, journal, journey, knowledge, notes, prayer, projects, reminders, tasks, timeline, weekly_review, momentum
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.core.rate_limit import RateLimitMiddleware
@@ -48,6 +48,8 @@ api.include_router(reminders.router)
 api.include_router(analytics.router)
 api.include_router(prayer.router)
 api.include_router(journey.router)
+api.include_router(weekly_review.router)
+api.include_router(momentum.router)
 
 
 @app.get("/api/v1/health", tags=["system"])
