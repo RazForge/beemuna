@@ -345,17 +345,16 @@ const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="settings-tz">{t("timezone")}</Label>
-            <Input
+            <select
               id="settings-tz"
-              list="tz-options"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
-            />
-            <datalist id="tz-options">
+              className="h-10 rounded-2xl border border-border bg-background px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40"
+            >
               {TIMEZONES.map((tz) => (
-                <option key={tz} value={tz} />
+                <option key={tz} value={tz}>{tz.replace(/_/g, " ")}</option>
               ))}
-            </datalist>
+            </select>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">

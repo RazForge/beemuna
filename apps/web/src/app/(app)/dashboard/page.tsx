@@ -81,7 +81,13 @@ export default function DashboardPage() {
   const reminders = remindersQuery.data ?? [];
   const analytics = analyticsQuery.data;
 
-  const hour = now.getHours();
+  const firstName = user?.name ? user.name.split(" ")[0] : "";
+
+  const userTimezone = user?.timezone || undefined;
+  const tzNow = userTimezone ? new Date(now.toLocaleString("en-US", { timeZone: userTimezone })) : now;
+  const hour = tzNow.getHours();
+  const minute = tzNow.getMinutes();
+  const second = tzNow.getSeconds();
   const greeting =
     hour < 6
       ? "Good night"
@@ -90,19 +96,27 @@ export default function DashboardPage() {
         : hour < 17
           ? t("good_afternoon")
           : t("good_evening");
-  const firstName = user?.name ? user.name.split(" ")[0] : "";
 
-  const seconds = now.getSeconds();
-  const minutes = now.getMinutes();
-  const hours = now.getHours();
+  const seconds = second;
+  const minutes = minute;
+  const hours = hour;
   const secondAngle = (seconds / 60) * 360;
   const minuteAngle = ((minutes + seconds / 60) / 60) * 360;
   const hourAngle = (((hours % 12) + minutes / 60 + seconds / 3600) / 12) * 360;
 
+  const tzOptions = userTimezone ? { timeZone: userTimezone } : undefined;
   const gregDate = now.toLocaleDateString(locale, {
     weekday: "long",
     month: "long",
     day: "numeric",
+    ...tzOptions,
+  });
+
+  const timeString = tzNow.toLocaleTimeString(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    ...tzOptions,
   });
 
   const secondaryDates = useMemo(() => {
@@ -174,6 +188,7 @@ export default function DashboardPage() {
 
           <div className="text-left">
             <p className="text-sm md:text-lg font-semibold text-foreground">{gregDate}</p>
+            <p className="mt-0.5 text-xs md:text-sm font-medium text-primary/70">{timeString}</p>
             {secondaryDates.map(
               (line, i) =>
                 line && (

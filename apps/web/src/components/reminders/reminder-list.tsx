@@ -316,13 +316,14 @@ export function ReminderList({
                 {/* Clock face */}
                 <div className="relative mx-auto flex h-28 w-28 items-center justify-center rounded-full border-[3px] border-foreground/15 bg-white dark:bg-white/90 shadow-[inset_0_2px_6px_rgba(0,0,0,0.08)]">
                   {Array.from({ length: 12 }).map((num) => {
-                    const angle = (num * 30 - 90) * Math.PI / 180;
-                    const isMain = num % 3 === 0;
+                    const n = num as number;
+                    const angle = (n * 30 - 90) * Math.PI / 180;
+                    const isMain = n % 3 === 0;
                     const r = 46;
                     const x = 50 + r * Math.cos(angle);
                     const y = 50 + r * Math.sin(angle);
                     return (
-                      <span key={num} className={`absolute font-bold ${isMain ? "text-[13px] text-foreground/80" : "text-[10px] text-foreground/40"}`} style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }}>{num}</span>
+                      <span key={n} className={`absolute font-bold ${isMain ? "text-[13px] text-foreground/80" : "text-[10px] text-foreground/40"}`} style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }}>{n}</span>
                     );
                   })}
                   <div
