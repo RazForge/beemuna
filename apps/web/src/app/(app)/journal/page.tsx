@@ -10,6 +10,7 @@ import {
   Save, Check, ChevronLeft, ChevronRight, Plus, X, SquarePlay, Music, Play, Link, ImagePlus,
   Bold, Italic, Underline, Strikethrough, Highlighter, List, ListOrdered, Quote, Eraser,
   BookOpen, CheckSquare, Heart, Lightbulb, Church, MoreHorizontal, Trash2,
+  Mic, MicOff, Circle, StopCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLang } from "@/lib/i18n";
@@ -334,6 +335,17 @@ function EntryEditor({
   const [linkInput, setLinkInput] = useState("");
   const [linkError, setLinkError] = useState<string | null>(null);
 
+  // Voice typing (Speech-to-Text)
+  const [voiceTyping, setVoiceTyping] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Voice memo recording
+  const [recording, setRecording] = useState(false);
+  const [recordTime, setRecordTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const prevSaveCounter = useRef(saveCounter);
   useEffect(() => {
     if (saveCounter !== prevSaveCounter.current) {
@@ -356,6 +368,96 @@ function EntryEditor({
     setLinkError(null);
     setMedia((prev) => [...prev, item]);
     setLinkInput("");
+  };
+
+  // ── Voice Typing (Speech-to-Text) ────────────────────────────────────────
+  const toggleVoiceTyping = () => {
+    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+      toast.error("Speech recognition is not supported in this browser");
+      return;
+    }
+
+    if (voiceTyping) {
+      recognitionRef.current?.stop();
+      setVoiceTyping(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      if (transcript && editorRef.current) {
+        editorRef.current.focus();
+        document.execCommand("insertText", false, transcript);
+        setContent(editorRef.current.innerText);
+      }
+    };
+
+    recognition.onerror = () => {
+      setVoiceTyping(false);
+    };
+
+    recognition.onend = () => {
+      setVoiceTyping(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setVoiceTyping(true);
+    toast.success("Voice typing started — speak now");
+  };
+
+  // ── Voice Memo Recording ─────────────────────────────────────────────────
+  const toggleRecording = async () => {
+    if (recording) {
+      mediaRecorderRef.current?.stop();
+      setRecording(false);
+      if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setMedia((prev) => [...prev, { type: "audio", url: reader.result as string, name: `Voice memo ${new Date().toLocaleTimeString()}` }]);
+          toast.success("Voice memo saved");
+        };
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach((t) => t.stop());
+      };
+
+      mediaRecorder.start();
+      setRecording(true);
+      setRecordTime(0);
+      recordTimerRef.current = setInterval(() => setRecordTime((t) => t + 1), 1000);
+    } catch {
+      toast.error("Microphone access denied");
+    }
+  };
+
+  const formatRecordTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${String(sec).padStart(2, "0")}`;
   };
 
   const snapshotFromEditor = () => {
@@ -496,6 +598,29 @@ function EntryEditor({
 
           {linkError && <p className="mt-2 text-[11px] text-destructive">{linkError}</p>}
 
+          {/* Voice Memo Record */}
+          <button
+            type="button"
+            onClick={toggleRecording}
+            className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed py-4 transition-all ${
+              recording
+                ? "border-red-500 bg-red-500/5 text-red-500 animate-pulse"
+                : "border-input hover:border-primary/40 hover:bg-primary/5 text-muted-foreground"
+            }`}
+          >
+            {recording ? (
+              <>
+                <StopCircle className="h-5 w-5" />
+                <span className="text-xs font-bold">Recording {formatRecordTime(recordTime)}</span>
+              </>
+            ) : (
+              <>
+                <Circle className="h-5 w-5 fill-current" />
+                <span className="text-xs font-bold">Record voice memo</span>
+              </>
+            )}
+          </button>
+
           <div
             onDragOver={(e) => { e.preventDefault(); }}
             onDrop={(e) => {
@@ -594,6 +719,19 @@ function EntryEditor({
             ><Quote className="h-4 w-4" /></ToolbarBtn>
           <div className="mx-1 h-5 w-px bg-black/10 dark:bg-white/10" />
           <ToolbarBtn title="Clear formatting" onClick={() => focusEditorInAndRun(editorRef.current, () => execInline("removeFormat"))}><Eraser className="h-4 w-4" /></ToolbarBtn>
+          <div className="mx-1 h-5 w-px bg-black/10 dark:bg-white/10" />
+          <button
+            type="button"
+            title={voiceTyping ? "Stop voice typing" : "Voice type (speech-to-text)"}
+            onClick={toggleVoiceTyping}
+            className={`flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+              voiceTyping
+                ? "bg-red-500/15 text-red-500 animate-pulse"
+                : "text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+            }`}
+          >
+            {voiceTyping ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </button>
         </div>
 
         <div
