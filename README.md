@@ -34,12 +34,12 @@ BE'EMUNA is a personal productivity platform that combines task management, jour
 - **Knowledge Base (RAG)** — spaces, sources, document chunking, embeddings (pgvector), concepts, relationships, and AI-powered citations
 
 ### Intelligence
-- **AI Assistant** — NVIDIA cloud-powered conversational AI with streaming, conversation memory, and auto-extracted facts
+- **AI Assistant** — cloud-powered conversational AI with streaming, conversation memory, and auto-extracted facts
 - **Auto-Memory** — the AI remembers important details from your conversations
 - **Application Data Context** — the AI knows about your tasks, journal entries, goals, and habits
 
 ### Faith & Culture
-- **7 Worldviews** — Christian, Muslim, Jewish, Hindu, Buddhist, Secular, or Unspecified
+- **3 Worldviews** — Christian, Muslim, or Unspecified
 - **Faith-Aware AI** — system prompts adapt to your worldview
 - **Triple Calendar** — Gregorian, Ethiopian (with Ge'ez numerals), and Hijri support
 - **Prayer Times** — automatic calculation for Muslim users
@@ -72,7 +72,7 @@ beemuna/
 | **Database** | PostgreSQL 16 + pgvector |
 | **Cache** | Redis |
 | **Auth** | Argon2 hashing, JWT (HS256), Google OAuth |
-| **AI** | NVIDIA API (Llama 3.1 8B / 70B) with OpenAI-compatible client |
+| **AI** | Cloud AI via OpenAI-compatible API |
 | **Mobile** | Expo (React Native) — Android APK |
 
 ## Getting Started
@@ -89,7 +89,7 @@ beemuna/
 git clone https://github.com/RazForge/beemuna.git
 cd beemuna
 cp .env.example .env
-# Edit .env — set DATABASE_URL, SECRET_KEY, NVIDIA_API_KEY, etc.
+# Edit .env — set DATABASE_URL, SECRET_KEY, AI_API_KEY, etc.
 ```
 
 ### 2. Start infrastructure
@@ -129,7 +129,12 @@ Open `http://localhost:3002`.
 SECRET_KEY=           # JWT signing secret (64-byte random hex)
 DATABASE_URL=         # PostgreSQL connection string
 REDIS_URL=            # Redis connection string
-NVIDIA_API_KEY=       # NVIDIA API key for cloud AI
+
+# AI Provider
+AI_PROVIDER=          # openai_compatible
+AI_MODEL=             # model name
+AI_BASE_URL=          # API endpoint
+AI_API_KEY=           # API key for your AI provider
 
 # Google OAuth
 GOOGLE_CLIENT_ID=
