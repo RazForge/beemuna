@@ -7,7 +7,6 @@ __pycache__/
 *.pyc
 .venv/
 venv/
-.env
 data/
 uploads/
 *.log
@@ -16,12 +15,19 @@ Thumbs.db
 coverage/
 .pytest_cache/
 .stripe/
+*.pem
+*.key
+apk/
+
 # Secrets - NEVER commit
+**/.env
+**/.env.local
+**/.env.production
+**/.env.*.local
 .env
 .env.local
 .env.production
 .env.*.local
 DEPLOY_VERCEL.md
 deploy.sh
-*.pem
-*.key
+DEPLOY_RAILWAY.md

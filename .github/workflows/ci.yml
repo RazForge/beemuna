@@ -14,8 +14,8 @@ jobs:
         image: pgvector/pgvector:pg17
         env:
           POSTGRES_USER: beemuna
-          POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-          POSTGRES_DB: beemuna
+          POSTGRES_PASSWORD: test_password_ci_only
+          POSTGRES_DB: beemuna_test
         ports: ["5433:5432"]
         options: >-
           --health-cmd pg_isready -U beemuna
@@ -31,9 +31,9 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgresql+psycopg://beemuna:${POSTGRES_PASSWORD}@localhost:5433/beemuna
+      DATABASE_URL: postgresql+psycopg://beemuna:test_password_ci_only@localhost:5433/beemuna_test
       REDIS_URL: redis://localhost:6379/0
-      SECRET_KEY: __CHANGE_ME__
+      SECRET_KEY: ci-test-only-not-a-real-secret
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
