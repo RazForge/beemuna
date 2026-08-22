@@ -205,7 +205,15 @@ export default function AIPage() {
   return (
     <div className="mx-auto flex h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)] max-w-6xl flex-col gap-3 md:gap-4">
       {/* Header */}
-      <header className="rounded-2xl border border-border/50 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl p-3 md:p-6 shadow-lg shadow-black/[0.03] dark:shadow-black/20">
+      <header className="relative rounded-3xl border border-white/40 dark:border-white/[0.08] p-3 md:p-6 shadow-[0_2px_20px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.4)]"
+        style={{
+          background: "rgba(255,255,255,0.65)",
+          backdropFilter: "blur(40px) saturate(180%)",
+        }}
+      >
+        <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
+          background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
+        }} />
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -344,12 +352,30 @@ export default function AIPage() {
               <div key={m.id} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                 <div
                   className={cn(
-                    "max-w-[90%] md:max-w-[80%] rounded-2xl px-3 md:px-3.5 py-2 md:py-2.5 text-[13px] md:text-sm leading-relaxed",
+                    "relative max-w-[90%] md:max-w-[80%] rounded-3xl px-4 md:px-4 py-3 md:py-3 text-[13px] md:text-sm leading-relaxed",
                     m.role === "user"
-                      ? "rounded-br-sm bg-primary/90 text-primary-foreground shadow-lg shadow-primary/10 backdrop-blur-xl border border-primary/20"
-                      : "rounded-bl-sm bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.08] shadow-lg shadow-black/[0.03] dark:shadow-black/20",
+                      ? "rounded-br-lg text-white shadow-[0_2px_16px_-2px_rgba(99,102,241,0.35)] border border-white/20"
+                      : "rounded-bl-lg shadow-[0_2px_20px_-4px_rgba(0,0,0,0.12)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.5)] border border-white/40 dark:border-white/[0.08]",
                   )}
+                  style={m.role === "user" ? {
+                    background: "linear-gradient(135deg, rgba(99,102,241,0.95), rgba(79,70,229,0.98))",
+                    backdropFilter: "blur(40px) saturate(180%)",
+                  } : {
+                    background: "rgba(255,255,255,0.72)",
+                    backdropFilter: "blur(40px) saturate(180%)",
+                  }}
                 >
+                  <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
+                    background: m.role === "user"
+                      ? "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 40%)"
+                      : "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
+                  }} />
+                  <div className="dark:hidden absolute inset-0 rounded-3xl pointer-events-none" style={{
+                    background: m.role === "user"
+                      ? "none"
+                      : "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 60%)",
+                  }} />
+                  <div className="relative z-10">
                   {m.content ? (
                     <span dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
                   ) : m.status === "error" ? (
@@ -360,29 +386,38 @@ export default function AIPage() {
                     </span>
                   )}
                   {m.role === "assistant" && m.sources.length > 0 && (
-                    <div className="mt-2 space-y-1 border-t border-black/[0.06] dark:border-white/[0.08] pt-2">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    <div className="mt-2.5 space-y-1.5 border-t border-black/[0.08] dark:border-white/[0.1] pt-2.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         {t("sources")}
                       </p>
                       {m.sources.map((s, i) => (
-                        <div key={i} className="rounded-lg bg-white/50 dark:bg-white/[0.04] backdrop-blur-md p-1.5 border border-black/[0.04] dark:border-white/[0.06]">
-                          <p className="text-xs font-medium">{s.source_title}</p>
+                        <div key={i} className="rounded-xl bg-white/50 dark:bg-white/[0.05] backdrop-blur-md p-2 border border-black/[0.05] dark:border-white/[0.08]">
+                          <p className="text-xs font-semibold">{s.source_title}</p>
                           <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{s.excerpt}</p>
                         </div>
                       ))}
                     </div>
                   )}
+                  </div>
                 </div>
               </div>
             ))}
 
             {streaming && (
               <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.08] px-3.5 py-2.5 text-sm leading-relaxed shadow-lg shadow-black/[0.03] dark:shadow-black/20">
+                <div className="relative max-w-[80%] rounded-3xl rounded-bl-lg px-4 py-3 text-sm leading-relaxed border border-white/40 dark:border-white/[0.08] shadow-[0_2px_20px_-4px_rgba(0,0,0,0.12)] dark:shadow-[0_2px_20px_-4px_rgba(0,0,0,0.5)]"
+                  style={{
+                    background: "rgba(255,255,255,0.72)",
+                    backdropFilter: "blur(40px) saturate(180%)",
+                  }}
+                >
+                  <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
+                    background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
+                  }} />
                   {streamText ? (
-                    <span dangerouslySetInnerHTML={{ __html: renderMarkdown(streamText) }} />
+                    <span className="relative z-10" dangerouslySetInnerHTML={{ __html: renderMarkdown(streamText) }} />
                   ) : (
-                    <span className="flex items-center gap-2 text-muted-foreground">
+                    <span className="relative z-10 flex items-center gap-2 text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" /> {t("thinking")}
                     </span>
                   )}

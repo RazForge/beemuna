@@ -194,19 +194,32 @@ export function Dock() {
       </AnimatePresence>
 
       {/* Bottom dock */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border/50 bg-card/80 backdrop-blur-xl safe-area-pb">
-        <div className="mx-auto flex max-w-lg items-center justify-around px-2 py-1">
+      <div className="fixed inset-x-0 bottom-0 z-50 safe-area-pb">
+        <div className="mx-auto flex max-w-md items-center justify-center gap-2 px-4 py-2">
           {mainItems.map(({ labelKey, href, icon: Icon }) => (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-[10px] font-medium transition-colors",
-                isActive(href) ? "text-primary" : "text-muted-foreground",
+                "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
+                isActive(href) ? "text-primary" : "text-muted-foreground hover:text-foreground",
               )}
+              style={{
+                background: isActive(href)
+                  ? "rgba(255,255,255,0.72)"
+                  : "rgba(255,255,255,0.45)",
+                backdropFilter: "blur(40px) saturate(180%)",
+                border: "1px solid rgba(255,255,255,0.5)",
+                boxShadow: isActive(href)
+                  ? "0 2px 16px -2px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.5)"
+                  : "0 2px 12px -2px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
+              }}
             >
-              <Icon className="h-5 w-5" strokeWidth={isActive(href) ? 2.5 : 2} />
-              <span className="leading-none">{t(labelKey)}</span>
+              <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
+                background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
+              }} />
+              <Icon className="relative z-10 h-5 w-5" strokeWidth={isActive(href) ? 2.5 : 2} />
+              <span className="relative z-10 leading-none">{t(labelKey)}</span>
             </Link>
           ))}
 
@@ -214,29 +227,51 @@ export function Dock() {
           <button
             onClick={() => setShowNotifs(!showNotifs)}
             className={cn(
-              "relative flex flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-[10px] font-medium transition-colors",
-              showNotifs ? "text-primary" : "text-muted-foreground",
+              "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
+              showNotifs ? "text-primary" : "text-muted-foreground hover:text-foreground",
             )}
+            style={{
+              background: showNotifs
+                ? "rgba(255,255,255,0.72)"
+                : "rgba(255,255,255,0.45)",
+              backdropFilter: "blur(40px) saturate(180%)",
+              border: "1px solid rgba(255,255,255,0.5)",
+              boxShadow: "0 2px 12px -2px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
+            }}
           >
-            <div className="relative">
+            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
+              background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
+            }} />
+            <div className="relative z-10">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive shadow-sm" />
               )}
             </div>
-            <span className="leading-none">{t("nav_notifications")}</span>
+            <span className="relative z-10 leading-none">{t("nav_notifications")}</span>
           </button>
 
           {/* More */}
           <button
             onClick={() => setShowMore(!showMore)}
             className={cn(
-              "flex flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-[10px] font-medium transition-colors",
-              showMore ? "text-primary" : "text-muted-foreground",
+              "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
+              showMore ? "text-primary" : "text-muted-foreground hover:text-foreground",
             )}
+            style={{
+              background: showMore
+                ? "rgba(255,255,255,0.72)"
+                : "rgba(255,255,255,0.45)",
+              backdropFilter: "blur(40px) saturate(180%)",
+              border: "1px solid rgba(255,255,255,0.5)",
+              boxShadow: "0 2px 12px -2px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
+            }}
           >
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="leading-none">More</span>
+            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
+              background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
+            }} />
+            <MoreHorizontal className="relative z-10 h-5 w-5" />
+            <span className="relative z-10 leading-none">More</span>
           </button>
         </div>
       </div>
