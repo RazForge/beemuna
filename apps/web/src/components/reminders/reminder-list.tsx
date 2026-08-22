@@ -35,22 +35,26 @@ function dayKey(d: Date): string {
 function playAlarm() {
   try {
     const ctx = new AudioContext();
-    const playBeep = (freq: number, start: number, dur: number) => {
+    const playBeep = (freq: number, start: number, dur: number, vol = 0.3) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
       osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + start);
+      gain.gain.setValueAtTime(vol, ctx.currentTime + start);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(ctx.currentTime + start);
       osc.stop(ctx.currentTime + start + dur);
     };
-    playBeep(880, 0, 0.15);
-    playBeep(1100, 0.18, 0.15);
-    playBeep(880, 0.36, 0.15);
-    playBeep(1320, 0.54, 0.3);
+    // 15-second alarm pattern: repeated beeps with pauses
+    for (let cycle = 0; cycle < 5; cycle++) {
+      const base = cycle * 3;
+      playBeep(880, base, 0.12, 0.25);
+      playBeep(1100, base + 0.14, 0.12, 0.3);
+      playBeep(880, base + 0.28, 0.12, 0.25);
+      playBeep(1320, base + 0.42, 0.25, 0.35);
+    }
   } catch {}
 }
 
@@ -254,16 +258,14 @@ export function ReminderList({
       {/* Apple-style bottom sheet */}
       {showSheet && (
         <>
-          {/* Backdrop */}
           <div
             className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
             onClick={() => setShowSheet(false)}
           />
-          {/* Sheet */}
           <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-card p-6 pb-10 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 animate-in slide-in-from-bottom duration-300">
-            {/* Handle */}
             <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-muted-foreground/30" />
 
+            {/* Title */}
             <input
               ref={inputRef}
               value={text}
@@ -271,27 +273,91 @@ export function ReminderList({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && text.trim()) submit();
               }}
-              placeholder="Reminder title"
-              className="mb-4 h-12 w-full rounded-2xl bg-muted px-4 text-[17px] font-medium outline-none placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-primary/40"
+              placeholder="What's the reminder?"
+              className="mb-5 h-12 w-full rounded-2xl bg-muted px-4 text-[17px] font-medium outline-none placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/40"
             />
 
-            {/* Quick time shortcuts */}
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick</p>
-            <div className="mb-4 flex flex-wrap gap-2">
-              <AppleTimeButton label="In 30 min" active={pickedDate.getTime() === quickTime(0).getTime() + 30 * 60000} onClick={() => { const d = new Date(); d.setMinutes(d.getMinutes() + 30); setPickedDate(d); }} />
-              <AppleTimeButton label="In 1 hr" active={false} onClick={() => setPickedDate(quickTime(1))} />
-              <AppleTimeButton label="In 2 hr" active={false} onClick={() => setPickedDate(quickTime(2))} />
-              <AppleTimeButton label="Tomorrow 9am" active={false} onClick={() => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); setPickedDate(d); }} />
+            {/* Date selection */}
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Date</p>
+            <div className="mb-4 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {[
+                { label: "Today", date: () => { const d = new Date(); d.setHours(pickedDate.getHours(), pickedDate.getMinutes(), 0, 0); return d; } },
+                { label: "Tomorrow", date: () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(pickedDate.getHours(), pickedDate.getMinutes(), 0, 0); return d; } },
+                { label: "In 2 days", date: () => { const d = new Date(); d.setDate(d.getDate() + 2); d.setHours(pickedDate.getHours(), pickedDate.getMinutes(), 0, 0); return d; } },
+                { label: "Next week", date: () => { const d = new Date(); d.setDate(d.getDate() + 7); d.setHours(pickedDate.getHours(), pickedDate.getMinutes(), 0, 0); return d; } },
+              ].map((opt) => {
+                const optDate = opt.date();
+                const active = pickedDate.toDateString() === optDate.toDateString();
+                return (
+                  <button
+                    key={opt.label}
+                    onClick={() => setPickedDate(opt.date())}
+                    className={cn(
+                      "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all",
+                      active
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80",
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+              <input
+                type="date"
+                value={`${pickedDate.getFullYear()}-${String(pickedDate.getMonth() + 1).padStart(2, "0")}-${String(pickedDate.getDate()).padStart(2, "0")}`}
+                onChange={(e) => {
+                  const [y, m, d] = e.target.value.split("-").map(Number);
+                  const newDate = new Date(pickedDate);
+                  newDate.setFullYear(y, m - 1, d);
+                  setPickedDate(newDate);
+                }}
+                className="shrink-0 rounded-full bg-muted px-3 py-2 text-sm font-semibold text-muted-foreground outline-none"
+              />
             </div>
 
-            {/* Custom datetime */}
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Custom</p>
-            <input
-              type="datetime-local"
-              value={toInputValue(pickedDate)}
-              onChange={(e) => setPickedDate(new Date(e.target.value))}
-              className="mb-5 h-12 w-full rounded-2xl bg-muted px-4 text-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-primary/40 dark:ring-white/10"
-            />
+            {/* Time selection */}
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Time</p>
+            <div className="mb-2 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {[
+                { label: "In 15 min", add: { h: 0, m: 15 } },
+                { label: "In 30 min", add: { h: 0, m: 30 } },
+                { label: "In 1 hr", add: { h: 1, m: 0 } },
+                { label: "In 2 hr", add: { h: 2, m: 0 } },
+              ].map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => {
+                    const d = new Date();
+                    d.setHours(d.getHours() + opt.add.h, d.getMinutes() + opt.add.m, 0, 0);
+                    setPickedDate(d);
+                  }}
+                  className="shrink-0 rounded-full bg-muted px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted/80 transition-all"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {/* Hour:Minute picker */}
+            <div className="mb-5 flex items-center justify-center gap-3">
+              <div className="flex flex-col items-center">
+                <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 1) % 24); return n; })} className="h-8 w-10 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted">▲</button>
+                <span className="h-12 w-14 flex items-center justify-center rounded-2xl bg-muted text-2xl font-bold tabular-nums">{String(pickedDate.getHours()).padStart(2, "0")}</span>
+                <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setHours((n.getHours() + 23) % 24); return n; })} className="h-8 w-10 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted">▼</button>
+              </div>
+              <span className="text-2xl font-bold text-muted-foreground">:</span>
+              <div className="flex flex-col items-center">
+                <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 5) % 60); return n; })} className="h-8 w-10 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted">▲</button>
+                <span className="h-12 w-14 flex items-center justify-center rounded-2xl bg-muted text-2xl font-bold tabular-nums">{String(pickedDate.getMinutes()).padStart(2, "0")}</span>
+                <button onClick={() => setPickedDate((d) => { const n = new Date(d); n.setMinutes((n.getMinutes() + 55) % 60); return n; })} className="h-8 w-10 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted">▼</button>
+              </div>
+            </div>
+
+            {/* Summary */}
+            <p className="mb-5 text-center text-sm text-muted-foreground">
+              {pickedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} at{" "}
+              {pickedDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+            </p>
 
             {/* Actions */}
             <div className="flex gap-3">
