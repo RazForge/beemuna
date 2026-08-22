@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Plus, Trash2, CalendarClock } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Plus, Trash2, CalendarClock, Bell, BellOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 import type { Reminder } from "@/lib/types";
+import { toast } from "sonner";
 
 interface ReminderListProps {
   reminders: Reminder[];
@@ -31,6 +32,37 @@ function dayKey(d: Date): string {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
+function playAlarm() {
+  try {
+    const ctx = new AudioContext();
+    const playBeep = (freq: number, start: number, dur: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur);
+    };
+    playBeep(880, 0, 0.15);
+    playBeep(1100, 0.18, 0.15);
+    playBeep(880, 0.36, 0.15);
+    playBeep(1320, 0.54, 0.3);
+  } catch {}
+}
+
+function formatAddDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${y}-${m}-${day}T${h}:${min}`;
+}
+
 export function ReminderList({
   reminders,
   onToggle,
@@ -42,8 +74,53 @@ export function ReminderList({
 }: ReminderListProps) {
   const { t } = useLang();
   const [text, setText] = useState("");
-  const [showDate, setShowDate] = useState(false);
-  const [dateValue, setDateValue] = useState("");
+  const [datetime, setDatetime] = useState(() => {
+    const d = defaultDate ? new Date(defaultDate) : new Date();
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    return formatAddDate(d);
+  });
+  const firedRef = useRef<Set<string>>(new Set());
+
+  // Alarm checker — polls every 10s, plays sound when reminder is due
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      for (const r of reminders) {
+        if (r.status === "completed") continue;
+        if (firedRef.current.has(r.id)) continue;
+        const due = new Date(r.scheduled_at).getTime();
+        if (due <= now && due > now - 15000) {
+          firedRef.current.add(r.id);
+          playAlarm();
+          toast(r.title, {
+            icon: <Bell className="h-4 w-4" />,
+            description: "Reminder due now",
+            duration: 10000,
+          });
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(r.title, { body: "Reminder due now" });
+          }
+        }
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [reminders]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Update datetime when defaultDate changes
+  useEffect(() => {
+    if (defaultDate) {
+      const d = new Date(defaultDate);
+      d.setHours(d.getHours() + 1, 0, 0, 0);
+      setDatetime(formatAddDate(d));
+    }
+  }, [defaultDate?.toDateString?.()]);
 
   const today = startOfDay(new Date());
   const tomorrow = new Date(today.getTime() + 86400000);
@@ -68,16 +145,13 @@ export function ReminderList({
   function submit() {
     const title = text.trim();
     if (!title || !onAdd) return;
-    let date = defaultDate ?? today;
-    if (showDate && dateValue) {
-      date = new Date(dateValue);
-    } else if (!showDate) {
-      date = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0);
-    }
+    const date = datetime ? new Date(datetime) : new Date();
     onAdd(title, date);
     setText("");
-    setDateValue("");
-    setShowDate(false);
+    // Reset datetime to next hour
+    const next = new Date();
+    next.setHours(next.getHours() + 1, 0, 0, 0);
+    setDatetime(formatAddDate(next));
   }
 
   return (
@@ -130,44 +204,35 @@ export function ReminderList({
       )}
 
       {onAdd && (
-        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-card/60 px-3 ring-1 ring-black/5 transition-colors focus-within:ring-2 focus-within:ring-primary/60 dark:ring-white/10">
-          <Plus className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") submit();
-            }}
-            placeholder={t("add_reminder")}
-            className="h-11 w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground/70"
-          />
-          <button
-            onClick={() => setShowDate(!showDate)}
-            className={cn(
-              "rounded-full p-1.5 transition-colors",
-              showDate ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground",
-            )}
-            title={t("reminder_placeholder")}
-          >
-            <CalendarClock className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
-      {onAdd && showDate && (
-        <div className="mt-2 flex items-center gap-2 px-1">
-          <input
-            type="datetime-local"
-            value={dateValue}
-            onChange={(e) => setDateValue(e.target.value)}
-            className="h-10 flex-1 rounded-xl bg-card/60 px-3 text-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-primary/60 dark:ring-white/10"
-          />
-          <button
-            onClick={submit}
-            className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
-          >
-            {t("add")}
-          </button>
+        <div className="mt-3 rounded-2xl bg-card/60 p-3 ring-1 ring-black/5 transition-colors focus-within:ring-2 focus-within:ring-primary/60 dark:ring-white/10">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submit();
+              }}
+              placeholder={t("add_reminder")}
+              className="h-10 w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground/70"
+            />
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input
+              type="datetime-local"
+              value={datetime}
+              onChange={(e) => setDatetime(e.target.value)}
+              className="h-9 flex-1 rounded-xl bg-transparent px-2 text-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-primary/60 dark:ring-white/10"
+            />
+            <button
+              onClick={submit}
+              disabled={!text.trim()}
+              className="h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {t("add")}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -186,6 +251,7 @@ function ReminderRow({
   last: boolean;
 }) {
   const done = reminder.status === "completed";
+  const isPast = !done && new Date(reminder.scheduled_at).getTime() < Date.now();
   return (
     <div
       className={cn(
@@ -208,12 +274,12 @@ function ReminderRow({
       <span
         className={cn(
           "min-w-0 flex-1 truncate text-[15px]",
-          done ? "text-muted-foreground line-through" : "text-foreground",
+          done ? "text-muted-foreground line-through" : isPast ? "text-amber-600 dark:text-amber-400 font-medium" : "text-foreground",
         )}
       >
         {reminder.title}
       </span>
-      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+      <span className={cn("shrink-0 text-xs tabular-nums", isPast ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground")}>
         {timeLabel(reminder.scheduled_at)}
       </span>
       <button
