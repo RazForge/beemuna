@@ -3,14 +3,14 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
 import { useLang } from "@/lib/i18n";
 import { formatError, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, FolderKanban, Check, Archive, Search, SortAsc, X } from "lucide-react";
+import { Plus, Trash2, FolderKanban, Check, Archive, Search, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 interface Project {
   id: string;
@@ -25,11 +25,15 @@ interface Project {
   progress: number;
 }
 
-const COLORS = ["#e58e7d", "#e0b060", "#7da86c", "#6ca0a8", "#8a7db0", "#c07da0"];
+const COLORS = ["#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#ec4899"];
 const FILTERS = ["all", "active", "completed", "archived"] as const;
-type Filter = typeof FILTERS[number];
-const SORT_OPTIONS = ["newest", "name", "progress"] as const;
-type Sort = typeof SORT_OPTIONS[number];
+type Filter = (typeof FILTERS)[number];
+
+const fade = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3 },
+};
 
 export default function ProjectsPage() {
   const { t } = useLang();
@@ -37,18 +41,35 @@ export default function ProjectsPage() {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
   const [color, setColor] = useState<string | null>(null);
-  const [desc, setDesc] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [sort, setSort] = useState<Sort>("newest");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editColor, setEditColor] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   const projectsQuery = useQuery({
     queryKey: ["projects"],
     queryFn: () => apiGet<Project[]>("/projects"),
+  });
+
+  const createProject = useMutation({
+    mutationFn: () =>
+      apiPost<Project>("/projects", {
+        name: draft.trim(),
+        description: null,
+        color,
+        status: "active",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      setDraft("");
+      setColor(null);
+      setShowCreate(false);
+      toast.success(t("project_created"));
+    },
+    onError: (err) => toast.error(formatError(err)),
   });
 
   const updateProject = useMutation({
@@ -62,20 +83,11 @@ export default function ProjectsPage() {
     onError: (err) => toast.error(formatError(err)),
   });
 
-  const createProject = useMutation({
-    mutationFn: () =>
-      apiPost<Project>("/projects", {
-        name: draft.trim(),
-        description: desc.trim() || null,
-        color,
-        status: "active",
-      }),
+  const deleteProject = useMutation({
+    mutationFn: (id: string) => apiDelete(`/projects/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
-      setDraft("");
-      setDesc("");
-      setColor(null);
-      toast.success(t("project_created"));
+      toast.success(t("project_deleted"));
     },
     onError: (err) => toast.error(formatError(err)),
   });
@@ -90,15 +102,6 @@ export default function ProjectsPage() {
     onError: (err) => toast.error(formatError(err)),
   });
 
-  const deleteProject = useMutation({
-    mutationFn: (id: string) => apiDelete(`/projects/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast.success(t("project_deleted"));
-    },
-    onError: (err) => toast.error(formatError(err)),
-  });
-
   const projects = projectsQuery.data ?? [];
 
   const visible = useMemo(() => {
@@ -109,292 +112,268 @@ export default function ProjectsPage() {
 
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter((p) => p.name.toLowerCase().includes(q) || (p.description ?? "").toLowerCase().includes(q));
-    }
-
-    if (sort === "name") list = [...list].sort((a, b) => a.name.localeCompare(b.name));
-    else if (sort === "progress") list = [...list].sort((a, b) => b.progress - a.progress);
-    else list = [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    return list;
-  }, [projects, filter, search, sort]);
-
-  const active = projects.filter((p) => !p.archived && p.status !== "completed");
-  const completed = projects.filter((p) => p.status === "completed" && !p.archived);
-  const archived = projects.filter((p) => p.archived);
-
-  function ProjectRow({ p }: { p: Project }) {
-    const { t } = useLang();
-    const isEditing = editingId === p.id;
-
-    if (isEditing) {
-      return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-card p-4 dark:border-white/20">
-          <Input
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            placeholder={t("new_project_name")}
-            className="font-semibold"
-          />
-          <Input
-            value={editDesc}
-            onChange={(e) => setEditDesc(e.target.value)}
-            placeholder={t("what_about")}
-          />
-          <div className="flex items-center justify-between">
-            <div className="flex gap-1.5">
-              {COLORS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setEditColor(editColor === c ? null : c)}
-                  className={cn(
-                    "h-5 w-5 rounded-full transition-transform",
-                    editColor === c && "scale-125 ring-2 ring-primary ring-offset-2 dark:ring-offset-background",
-                  )}
-                  style={{ backgroundColor: c }}
-                  aria-label={`Color ${c}`}
-                />
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() =>
-                  updateProject.mutate({
-                    id: p.id,
-                    name: editName.trim() || p.name,
-                    description: editDesc.trim() || null,
-                    color: editColor,
-                  })
-                }
-                disabled={!editName.trim()}
-              >
-                {t("save")}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.description ?? "").toLowerCase().includes(q),
       );
     }
 
-    return (
-      <div
-        className="flex flex-col gap-2 rounded-2xl border border-black/5 bg-card px-4 py-3 dark:border-white/10 cursor-pointer transition-colors hover:bg-accent/50"
-        onClick={() => router.push(`/projects/${p.id}`)}
-      >
-        <div className="flex items-center gap-3">
-          <span
-            className="h-3 w-3 shrink-0 rounded-full"
-            style={{ backgroundColor: p.color ?? "#94a3b8" }}
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-semibold">{p.name}</p>
-            {p.description && (
-              <p className="truncate text-[13px] text-muted-foreground">{p.description}</p>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
-              {p.completed_count}/{p.task_count}
-            </span>
-            {!p.archived && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleStatus.mutate({
-                    id: p.id,
-                    status: p.status === "completed" ? "active" : "completed",
-                  });
-                }}
-                title={p.status === "completed" ? t("reopen") : t("mark_complete")}
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                  p.status === "completed"
-                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                    : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10",
-                )}
-              >
-                <Check className="h-4 w-4" />
-              </button>
-            )}
-            {!p.archived && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleStatus.mutate({ id: p.id, status: "archived" });
-                }}
-                title={t("archive")}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-              >
-                <Archive className="h-4 w-4" />
-              </button>
-            )}
-            {p.archived && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleStatus.mutate({ id: p.id, status: "active" });
-                }}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-                title={t("unarchive")}
-              >
-                <Archive className="h-4 w-4" />
-              </button>
-            )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditingId(p.id);
-                setEditName(p.name);
-                setEditDesc(p.description ?? "");
-                setEditColor(p.color);
-              }}
-              title={t("edit")}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-            >
-              <span className="text-[11px] font-bold">✎</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteProject.mutate(p.id);
-              }}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-destructive transition-colors hover:bg-destructive/10"
-              title={t("delete")}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        {p.task_count > 0 && (
-          <div className="mt-1 flex items-center gap-2">
-            <div className="h-1.5 flex-1 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-primary/80 transition-all"
-                style={{ width: `${p.progress}%` }}
-              />
-            </div>
-            <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{p.progress}%</span>
-          </div>
-        )}
-      </div>
-    );
-  }
+    return [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [projects, filter, search]);
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-8 pt-4">
-      <header className="glass rounded-[28px] p-7 flex flex-wrap items-center justify-between gap-4 shadow-xl border-white/20 dark:border-white/5">
-        <div>
-          <h1 className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15 text-primary shadow-inner">
-              <FolderKanban className="h-6 w-6" />
-            </span>
-            <span className="bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-              {t("projects_title")}
-            </span>
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground max-w-2xl font-medium">{t("projects_desc")}</p>
-        </div>
-      </header>
-
-      {/* Create */}
-      <div className="apple-card flex flex-col gap-3 p-5">
-        <Input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && draft.trim()) createProject.mutate();
-          }}
-          placeholder={t("new_project_name")}
-        />
-        <Input
-          value={desc}
-          onChange={(e) => setDesc(e.target.value)}
-          placeholder={t("what_about")}
-        />
+    <div className="mx-auto max-w-3xl space-y-6">
+      {/* Header */}
+      <motion.header {...fade}>
         <div className="flex items-center justify-between">
-          <div className="flex gap-1.5">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setColor(color === c ? null : c)}
-                className={cn(
-                  "h-5 w-5 rounded-full transition-transform",
-                  color === c && "scale-125 ring-2 ring-primary ring-offset-2 dark:ring-offset-background",
-                )}
-                style={{ backgroundColor: c }}
-                aria-label={`Color ${c}`}
-              />
-            ))}
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{t("projects_title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("projects_desc")}</p>
           </div>
-          <Button
-            onClick={() => createProject.mutate()}
-            disabled={!draft.trim() || createProject.isPending}
-          >
-            <Plus className="h-4 w-4" /> {t("create")}
+          <Button onClick={() => setShowCreate(!showCreate)} className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Project
           </Button>
         </div>
-      </div>
+      </motion.header>
 
-      {/* Search, filter, sort */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Create form */}
+      {showCreate && (
+        <motion.div {...fade}>
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="space-y-3">
+              <Input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && draft.trim()) createProject.mutate();
+                }}
+                placeholder="Project name"
+                autoFocus
+              />
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1.5">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setColor(color === c ? null : c)}
+                      className={cn(
+                        "h-6 w-6 rounded-full transition-all",
+                        color === c
+                          ? "scale-125 ring-2 ring-primary ring-offset-2 ring-offset-card"
+                          : "hover:scale-110",
+                      )}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowCreate(false);
+                      setDraft("");
+                      setColor(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => createProject.mutate()}
+                    disabled={!draft.trim() || createProject.isPending}
+                  >
+                    Create
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Search + filters */}
+      <motion.div {...fade} transition={{ duration: 0.3, delay: 0.05 }} className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("search")}
+            placeholder="Search projects..."
             className="pl-9"
           />
         </div>
-        <div className="flex rounded-full border border-input bg-card p-0.5">
+        <div className="flex rounded-xl border border-border bg-card p-0.5">
           {FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "h-8 rounded-full px-3 text-xs font-medium transition-colors",
+                "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                 filter === f
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {f === "all" ? t("all") : f === "active" ? t("active") : f === "completed" ? t("completed") : t("archived")}
+              {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
         </div>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as Sort)}
-          className="h-9 rounded-full border border-input bg-card px-3 text-sm"
-        >
-          <option value="newest">{t("sort_newest")}</option>
-          <option value="name">{t("sort_name")}</option>
-          <option value="progress">{t("sort_progress")}</option>
-        </select>
-      </div>
+      </motion.div>
 
-      {visible.length > 0 && (
-        <section>
-          <h2 className="mb-2.5 text-[15px] font-semibold text-muted-foreground">
-            {t("all")} ({visible.length})
-          </h2>
-          <div className="flex flex-col gap-2">
-            {visible.map((p) => (
-              <ProjectRow key={p.id} p={p} />
-            ))}
+      {/* Project list */}
+      <motion.div {...fade} transition={{ duration: 0.3, delay: 0.1 }} className="space-y-2">
+        {visible.map((p) => (
+          <div
+            key={p.id}
+            className="group rounded-2xl border border-border bg-card transition-all hover:border-primary/20"
+          >
+            {editingId === p.id ? (
+              /* Edit mode */
+              <div className="p-4 space-y-3">
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Project name"
+                  autoFocus
+                />
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-1.5">
+                    {COLORS.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setEditColor(editColor === c ? null : c)}
+                        className={cn(
+                          "h-5 w-5 rounded-full transition-all",
+                          editColor === c && "scale-125 ring-2 ring-primary ring-offset-2 ring-offset-card",
+                        )}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        updateProject.mutate({
+                          id: p.id,
+                          name: editName.trim() || p.name,
+                          description: editDesc.trim() || null,
+                          color: editColor,
+                        })
+                      }
+                      disabled={!editName.trim()}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* View mode */
+              <div className="flex items-center gap-3 p-4">
+                <button
+                  onClick={() => router.push(`/projects/${p.id}`)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: p.color ?? "#6366f1" }}
+                    />
+                    <span className="truncate text-sm font-semibold">{p.name}</span>
+                  </div>
+                  {p.task_count > 0 && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden max-w-[200px]">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${p.progress}%` }}
+                        />
+                      </div>
+                      <span className="text-[11px] text-muted-foreground">
+                        {p.completed_count}/{p.task_count}
+                      </span>
+                    </div>
+                  )}
+                </button>
+
+                {/* Action buttons — always visible */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStatus.mutate({
+                        id: p.id,
+                        status: p.status === "completed" ? "active" : "completed",
+                      });
+                    }}
+                    className={cn(
+                      "h-8 w-8 flex items-center justify-center rounded-lg transition-colors",
+                      p.status === "completed"
+                        ? "bg-success/10 text-success"
+                        : "text-muted-foreground hover:bg-muted",
+                    )}
+                    title={p.status === "completed" ? "Reopen" : "Complete"}
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingId(p.id);
+                      setEditName(p.name);
+                      setEditDesc(p.description ?? "");
+                      setEditColor(p.color);
+                    }}
+                    className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                    title="Edit"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStatus.mutate({
+                        id: p.id,
+                        status: p.archived ? "active" : "archived",
+                      });
+                    }}
+                    className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                    title={p.archived ? "Unarchive" : "Archive"}
+                  >
+                    <Archive className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`Delete "${p.name}"?`)) {
+                        deleteProject.mutate(p.id);
+                      }
+                    }}
+                    className="h-8 w-8 flex items-center justify-center rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </section>
-      )}
+        ))}
 
-      {projects.length === 0 && (
-        <p className="py-10 text-center text-sm text-muted-foreground">
-          {t("no_projects")}
-        </p>
-      )}
+        {projects.length === 0 && (
+          <div className="py-16 text-center">
+            <FolderKanban className="mx-auto h-10 w-10 text-muted-foreground/50" />
+            <p className="mt-3 text-sm text-muted-foreground">{t("no_projects")}</p>
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }
