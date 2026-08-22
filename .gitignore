@@ -16,3 +16,12 @@ Thumbs.db
 coverage/
 .pytest_cache/
 .stripe/
+# Secrets - NEVER commit
+.env
+.env.local
+.env.production
+.env.*.local
+DEPLOY_VERCEL.md
+deploy.sh
+*.pem
+*.key

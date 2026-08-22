@@ -2,27 +2,26 @@
 
 > **Your time. Your knowledge. Your direction.**
 
-BE'EMUNA is a full-stack personal operating system for productivity, timeline/journaling, knowledge management, research, and AI-powered assistance.
+BE'EMUNA is a full-stack personal operating system for productivity, journaling, knowledge management, and AI-powered assistance.
 
-It is a **monorepo** containing a Next.js frontend, a FastAPI backend, background workers, and shared packages, designed to be production-ready and self-hostable.
+## Live
 
-**Wait — this is a stub README, not the real thing.** The version you asked me to "complete" was already fairly complete. If you wanted a *full rewrite*, say so and I'll rewrite it wholesale. Otherwise here's the drift between the stub above and the code as it actually exists, which I've now corrected.
+- **Frontend** — https://beemuna.vercel.app
+- **Backend API** — https://beemuna-production.up.railway.app/api/v1/docs
 
----
+## Features
 
-## Feature highlights
-
-- **Projects & Tasks** — nested projects, tasks, and subtasks ([`projects.py`](apps/api/app/api/v1/projects.py), [`tasks.py`](apps/api/app/api/v1/tasks.py))
-- **Goals & Milestones** — track outcomes and progress toward them (`goals.py`)
-- **Habits** — habit tracking with per-day completions (`habits.py`)
-- **Journal** — private, encrypted-at-rest-capable daily journaling; **never auto-fed to AI** by default (`journal.py`)
-- **Notes** — rich notes with folder organization (`notes.py`)
-- **Calendar** — native **Gregorian + Ethiopian** support with Ge'ez numerals and Amharic month names, plus **Hijri** and holiday helpers (`calendar.py`, [`ethiopian.ts`](apps/web/src/lib/ethiopian.ts), [`hijri.ts`](apps/web/src/lib/hijri.ts), [`faith.ts`](apps/web/src/lib/faith.ts))
-- **Focus & Timeline** — Pomodoro-style focus sessions and a life-timeline view (`focus.py`, `timeline.py`, `timeline_service.py`)
-- **Knowledge base / RAG** — spaces, sources, document chunking, embeddings (pgvector), concepts, relationships, and citations (`knowledge.py`, [`rag.py`](apps/api/app/services/rag.py), [`embedding_service.py`](apps/api/app/services/embedding_service.py), [`document_processor.py`](apps/api/app/services/document_processor.py))
-- **AI assistant** — provider-agnostic chat over your scoped data (`ai.py`, `ai_service.py`)
-- **Reminders & Notifications** — schedule-aware reminders with quiet hours (`reminders.py`, `notifications`)
-- **Faith tools** — Bible-verse inspiration, faith-aware reminders and content (`faith.ts`)
+- **Projects & Tasks** — nested projects, tasks, and subtasks
+- **Goals & Milestones** — track outcomes and progress
+- **Habits** — habit tracking with per-day completions
+- **Journal** — private daily journaling with mood, tags, and media attachments
+- **Notes** — rich notes with folder organization
+- **Calendar** — native **Gregorian + Ethiopian** support with Ge'ez numerals and Amharic month names, plus **Hijri** and faith-aware holiday helpers
+- **Focus & Timeline** — Pomodoro-style focus sessions and a life-timeline view
+- **Knowledge Base / RAG** — spaces, sources, document chunking, embeddings (pgvector), concepts, relationships, and citations
+- **AI Assistant** — NVIDIA cloud-powered conversational AI with conversation memory, application data context, worldview-aware system prompts, and streaming responses
+- **Reminders & Notifications** — schedule-aware reminders with quiet hours
+- **Faith Tools** — Bible-verse inspiration, faith-aware reminders and content
 
 ## Architecture
 
@@ -31,74 +30,72 @@ beemuna/
 ├── apps/
 │   ├── web/                 Next.js 16 + TypeScript + Tailwind v4 frontend
 │   └── api/                 FastAPI + SQLAlchemy + Alembic backend
-├── packages/                Shared config / types / ui / utils (monorepo workspace)
 ├── workers/                 Python background workers (RQ + scheduler thread)
 ├── infrastructure/
-│   ├── docker/              Container definitions (Dockerfiles)
-│   └── migrations/          SQL migration assets
-├── tests/                   Shared test assets
-└── docs/                    Architecture & operations docs
+│   └── docker/              Container definitions (Dockerfile)
+└── tests/                   Test assets
 ```
 
-Web routes mirror the API: `dashboard`, `projects`, `tasks`, `goals`, `habits`, `journal`, `notes`, `calendar`, `focus`, `timeline`, `knowledge`, `ai`, `settings`.
-
-## Core stack
+## Stack
 
 | Layer     | Tech |
 |-----------|------|
-| Backend   | Python 3.14, FastAPI, SQLAlchemy 2, Alembic, Pydantic v2 |
-| Database  | PostgreSQL 17 + pgvector |
-| Queues    | Redis 7 + RQ |
-| Frontend  | Next.js 16, React 19, TypeScript 5, Tailwind CSS v4, TanStack Query, Zod, Radix UI, TipTap, Framer Motion |
-| Auth      | Argon2 password hashing, JWT (HS256) + server-side sessions |
-| AI        | Provider abstraction: Ollama, OpenAI-compatible, OpenAI, Anthropic, Gemini-compatible |
+| Backend   | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic v2 |
+| Database  | PostgreSQL 16 + pgvector (Supabase) |
+| Cache     | Upstash Redis |
+| Frontend  | Next.js 16, React 19, TypeScript 5, Tailwind CSS v4, TanStack Query, Radix UI |
+| Auth      | Argon2 password hashing, JWT (HS256), Google OAuth |
+| AI        | NVIDIA API (Llama 3.1 8B / 70B) with streaming |
 
-## Getting started
+## Deployment
+
+| Service | Platform | URL |
+|---------|----------|-----|
+| Frontend | Vercel | https://beemuna.vercel.app |
+| Backend | Railway | https://beemuna-production.up.railway.app |
+| Database | Supabase | PostgreSQL + pgvector |
+| Cache | Upstash | Redis |
+
+- **Dockerfile** — Python 3.12-slim, runs Alembic migrations on startup, then Uvicorn
+- **Railway** — auto-deploys from GitHub (`RazForge/beemuna`, `main` branch)
+- **Vercel** — auto-deploys from GitHub
+
+## Getting Started
 
 ### Prerequisites
 
-- Docker (PostgreSQL + Redis run in containers)
-- Python 3.14+
-- Node.js 20+
+- Python 3.12+
+- Node.js 22+
+- Docker (for local Postgres + Redis)
 
 ### 1. Configure environment
 
 ```bash
 cp .env.example .env
-# edit .env — set SECRET_KEY, pick an AI provider, etc.
+# edit .env — set DATABASE_URL, NVIDIA_API_KEY, SECRET_KEY, etc.
 ```
 
-### 2. Start the infrastructure
+### 2. Start infrastructure
 
 ```bash
 docker compose up -d
 ```
 
-Starts `postgres` on `:5433` and `redis` on `:6380` (host ports deliberately offset to avoid colliding with any local Postgres/Redis).
+Starts PostgreSQL on `:5432` and Redis on `:6379`.
 
 ### 3. Run the API
 
 ```bash
 cd apps/api
-python -m venv .venv && .venv/Scripts/activate   # Windows, or python3 -m venv on POSIX
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 alembic upgrade head
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8002 --timeout-keep-alive 300
 ```
 
-API docs (Swagger UI) at `http://localhost:8000/docs` when `ENVIRONMENT=development`.
+API docs at `http://localhost:8002/docs`.
 
-### 4. Run the worker
-
-```bash
-cd workers
-pip install -r ../apps/api/requirements.txt
-python worker.py
-```
-
-Runs RQ worker for `documents`, `ai`, and `default` queues plus a scheduler loop for reminders, document processing, embedding, and cleanup.
-
-### 5. Run the web frontend
+### 4. Run the web frontend
 
 ```bash
 cd apps/web
@@ -106,82 +103,57 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3002` (see `NEXT_PUBLIC_APP_URL`). The `(app)` route group is guarded by [`auth-guard.tsx`](apps/web/src/components/layout/auth-guard.tsx).
+Open `http://localhost:3002`.
 
-## Environment variables
+## Environment Variables
 
-All variables are documented in [`.env.example`](.env.example):
+| Variable | Purpose |
+|----------|---------|
+| `SECRET_KEY` | JWT signing secret |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `REDIS_URL` | Redis connection string |
+| `NVIDIA_API_KEY` | NVIDIA API key for cloud AI |
+| `AI_CLOUD_MODEL` | Cloud AI model (`meta/llama-3.1-8b-instruct` or `meta/llama-3.1-70b-instruct`) |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `GOOGLE_REDIRECT_URI` | Google OAuth redirect URI |
+| `NEXT_PUBLIC_API_URL` | Web → API base URL |
+| `NEXT_PUBLIC_APP_URL` | Web origin |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID (frontend) |
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `SECRET_KEY` | `change-me...` | JWT signing secret — **change in production** |
-| `DATABASE_URL` | `postgresql+psycopg://beemuna:beemuna_dev@localhost:5433/beemuna` | SQLAlchemy connection string |
-| `REDIS_URL` | `redis://localhost:6380/0` | Queue + cache backend |
-| `AI_PROVIDER` | `ollama` | `ollama \| openai \| openai_compatible \| anthropic \| gemini` |
-| `AI_MODEL` / `EMBEDDING_MODEL` | `llama3.1` / `nomic-embed-text` | Model names |
-| `EMBEDDING_DIMENSIONS` | `768` | pgvector vector size — **must match migration** |
-| `OLLAMA_URL` | `http://localhost:11434` | Local Ollama endpoint |
-| `STRIPE_*` | *(empty)* | Billing (optional, free-plan default) |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8002/api/v1` | Web → API base (used by [`lib/api.ts`](apps/web/src/lib/api.ts)) |
-| `NEXT_PUBLIC_APP_URL` | `http://localhost:3002` | Web origin for CORS |
+## API Surface
 
-Authentication is registered on `/api/v1/auth` (`register`/`login`/`logout`), rate-limited traffic is enforced by [`rate_limit.py`](apps/api/app/core/rate_limit.py) (login and health exempt).
+Routers under `/api/v1`:
 
-## API surface
+`auth`, `projects`, `tasks`, `goals`, `journal`, `notes`, `habits`, `calendar`, `focus`, `timeline`, `knowledge`, `ai`, `reminders`, `health`
 
-Routers mounted under `/api/v1` in [`main.py`](apps/api/app/main.py):
+## Data Model
 
-`auth`, `projects`, `tasks`, `goals`, `journal`, `notes`, `habits`, `calendar`, `focus`, `timeline`, `knowledge`, `ai`, `reminders`, plus `GET /api/v1/health`.
+Key entities (SQLAlchemy models in `apps/api/app/models/`):
 
-## Data model
-
-Key entities (SQLAlchemy models under [`apps/api/app/models/`](apps/api/app/models/)):
-
-- **Identity**: `User` (incl. `religion`, `calendar_mode`, `ai_access` JSONB matrix), `Session`, `Subscription` (Stripe-backed)
+- **Identity**: `User` (religion, calendar_mode, ai_access, auth_provider), `Session`
 - **Productivity**: `Project`, `Task`, `Subtask`, `Goal`, `Milestone`, `Habit`, `HabitCompletion`, `CalendarEvent`, `FocusSession`
 - **Content**: `JournalEntry`, `Note`, `NoteFolder`, `TimelineItem`
 - **Knowledge**: `KnowledgeSpace`, `Source`, `DocumentChunk`, `Embedding`, `Concept`, `Relationship`, `Citation`
-- **AI**: `AIConversation`, `AIMessage`
-- **System**: `Reminder`, `Notification`, `AuditLog`
+- **AI**: `AIConversation`, `AIMessage`, `AIMemory`
+- **System**: `Reminder`, `Notification`
 
-Migrations live in [`apps/api/alembic/versions/`](apps/api/alembic/versions/).
+Migrations in `apps/api/alembic/versions/`.
 
-## Background workers
-
-[`workers/`](workers/) runs on Redis queues:
-
-- `documents` — upload ingestion: parse PDF/DOCX/Markdown → chunk → store chunks (`document_processing.py`, `db.py`)
-- `ai` — AI responses and embedding jobs (`ai_jobs.py`)
-- `default` — general jobs
-- **Scheduler loop** (every 30s) — deliver reminders, process pending documents, embed pending sources, housekeeping every 6h (`cleanup.py`, `reminders.py`)
-
-## Security model
+## Security
 
 - Passwords hashed with **Argon2**
-- Identity always derived from the authenticated server context — never from client-supplied IDs (see [`deps.py`](apps/api/app/api/deps.py))
-- Every user-owned query enforces ownership
-- AI/RAG retrieval scoped by `user_id + knowledge_space_id + source` permissions
-- Journal content is **private by default** and never auto-fed to AI (`ai_access` defaults to `journal: false`)
-- Secure file uploads with size caps, rate limiting, CORS allow-list, audit logging
-- Session tokens stored hashed
+- Identity derived from server-side auth context — never from client-supplied IDs
+- Every query enforces ownership
+- AI/RAG scoped by `user_id`
+- Journal content is **private by default** and never auto-fed to AI
+- CORS allow-list, rate limiting, secure session tokens
 
-## Docker
+## Test Account
 
-Full app (API + worker) is defined in [`docker-compose.yml`](docker-compose.yml) but the `api` and `worker` services require the Dockerfiles in `infrastructure/docker/` — **note: those Dockerfiles are not yet committed** (the directory exists but is empty). Until they're added, run the API and worker on the host against the containerized Postgres/Redis.
-
-## Tests
-
-```bash
-cd apps/api
-pytest
-```
-
-Current suites cover auth API flow and calendar conversion (`tests/test_auth_api.py`, `tests/test_calendar.py`).
-
-## Status
-
-Working scaffold: full API surface, migrations, web pages for every feature area, worker skeleton, RAG pipeline, and dual-calendar logic are in place. Not-yet-done: Dockerfiles for api/worker, `packages/*` are empty workspace dirs, `tests/` and `docs/` are empty, and the web app is still largely default `create-next-app` scaffolding behind the route folders.
+- Email: `test@razforge.com`
+- Password: `Test1234!`
 
 ## License
 
-Private / proprietary. No license file has been committed yet.
+Private / proprietary.
