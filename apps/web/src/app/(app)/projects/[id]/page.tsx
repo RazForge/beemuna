@@ -100,7 +100,7 @@ export default function ProjectFolderPage() {
 
   const updateBlock = useMutation({
     mutationFn: ({ id, ...patch }: Partial<ProjectBlock> & { id: string }) =>
-      apiPatch<ProjectBlock>(`/blocks/${id}`, patch),
+      apiPatch<ProjectBlock>(`/projects/blocks/${id}`, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project-blocks", projectId] });
       setEditingId(null);
@@ -109,7 +109,7 @@ export default function ProjectFolderPage() {
   });
 
   const deleteBlock = useMutation({
-    mutationFn: (id: string) => apiDelete(`/blocks/${id}`),
+    mutationFn: (id: string) => apiDelete(`/projects/blocks/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project-blocks", projectId] });
       toast.success("Block deleted");

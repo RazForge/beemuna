@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
         name,
-        religion: religion || "christian",
+        religion: religion || "unspecified",
       });
       setToken(data.access_token);
       setUser(data.user);

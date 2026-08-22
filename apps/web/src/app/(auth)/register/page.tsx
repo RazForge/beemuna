@@ -20,7 +20,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [religion, setReligion] = useState<string>("christian");
+  const [religion, setReligion] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const PERSPECTIVES = [
@@ -37,7 +37,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await register(email, password, name || undefined, religion);
+      await register(email, password, name || undefined, religion || "unspecified");
       toast.success(t("account_created"));
       router.push("/dashboard");
     } catch (err) {
@@ -136,7 +136,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold" loading={loading}>
+          <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold" loading={loading} disabled={!religion}>
             {t("create_account")}
           </Button>
         </form>

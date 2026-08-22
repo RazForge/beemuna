@@ -6,7 +6,6 @@ import { useLang } from "@/lib/i18n";
 import { apiGet, apiPatch } from "@/lib/api";
 import type { AISettings } from "@/lib/types";
 import { ProviderStatusCard } from "@/components/ai/provider-status";
-import { MemoryPanel } from "@/components/ai/memory-panel";
 import { ArrowLeft } from "lucide-react";
 
 export default function AISettingsPage() {
@@ -69,10 +68,6 @@ export default function AISettingsPage() {
             </button>
           </div>
         ))}
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card p-5">
-        <MemoryPanel />
       </section>
 
       <button
