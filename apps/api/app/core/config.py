@@ -31,6 +31,7 @@ class Settings(BaseSettings):
         "http://0.0.0.0:3001",
         "http://0.0.0.0:3002",
         "http://0.0.0.0:3003",
+        "https://beemuna.vercel.app",
     ]
 
     # AI Provider — BEEMUNA AI Gateway
