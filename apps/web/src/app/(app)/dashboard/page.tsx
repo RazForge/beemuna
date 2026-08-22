@@ -19,9 +19,6 @@ import {
   Target,
   Flame,
   Clock,
-  TrendingUp,
-  Brain,
-  Zap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -303,32 +300,6 @@ export default function DashboardPage() {
           </div>
         </motion.section>
       )}
-
-      {/* Quick actions */}
-      <motion.section {...fade} transition={{ duration: 0.4, delay: 0.15 }}>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {[
-            { href: "/ai", icon: Brain, label: "AI Assistant", color: "text-primary bg-primary/10" },
-            { href: "/journal", icon: BookHeart, label: "Write Journal", color: "text-accent-foreground bg-accent" },
-            { href: "/knowledge", icon: Zap, label: "Knowledge", color: "text-warning bg-warning/10" },
-            { href: "/timeline", icon: TrendingUp, label: "Timeline", color: "text-success bg-success/10" },
-          ].map(({ href, icon: Icon, label, color }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:bg-primary/5"
-            >
-              <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${color}`}>
-                <Icon className="h-4 w-4" />
-              </div>
-              <span className="text-sm font-medium">{label}</span>
-            </Link>
-          ))}
-        </div>
-      </motion.section>
 
       {/* Reminders */}
       <motion.section {...fade} transition={{ duration: 0.4, delay: 0.2 }}>
