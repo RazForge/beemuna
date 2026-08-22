@@ -50,6 +50,16 @@ const moreItems = [
   { labelKey: "nav_settings", href: "/settings", icon: Settings },
 ];
 
+const glassStyle = {
+  background: "rgba(255,255,255,0.55)",
+  backdropFilter: "blur(40px) saturate(180%)",
+  WebkitBackdropFilter: "blur(40px) saturate(180%)",
+  border: "1px solid rgba(255,255,255,0.5)",
+  boxShadow: "0 2px 12px -2px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
+};
+
+const glassGradient = "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)";
+
 export function Dock() {
   const pathname = usePathname();
   const router = useRouter();
@@ -202,22 +212,11 @@ export function Dock() {
               href={href}
               className={cn(
                 "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
-                isActive(href) ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                isActive(href) ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
-              style={{
-                background: isActive(href)
-                  ? "rgba(255,255,255,0.72)"
-                  : "rgba(255,255,255,0.45)",
-                backdropFilter: "blur(40px) saturate(180%)",
-                border: "1px solid rgba(255,255,255,0.5)",
-                boxShadow: isActive(href)
-                  ? "0 2px 16px -2px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.5)"
-                  : "0 2px 12px -2px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
-              }}
+              style={glassStyle}
             >
-              <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
-                background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
-              }} />
+              <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: glassGradient }} />
               <Icon className="relative z-10 h-5 w-5" strokeWidth={isActive(href) ? 2.5 : 2} />
               <span className="relative z-10 leading-none">{t(labelKey)}</span>
             </Link>
@@ -228,20 +227,11 @@ export function Dock() {
             onClick={() => setShowNotifs(!showNotifs)}
             className={cn(
               "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
-              showNotifs ? "text-primary" : "text-muted-foreground hover:text-foreground",
+              showNotifs ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
-            style={{
-              background: showNotifs
-                ? "rgba(255,255,255,0.72)"
-                : "rgba(255,255,255,0.45)",
-              backdropFilter: "blur(40px) saturate(180%)",
-              border: "1px solid rgba(255,255,255,0.5)",
-              boxShadow: "0 2px 12px -2px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
-            }}
+            style={glassStyle}
           >
-            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
-              background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
-            }} />
+            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: glassGradient }} />
             <div className="relative z-10">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
@@ -256,20 +246,11 @@ export function Dock() {
             onClick={() => setShowMore(!showMore)}
             className={cn(
               "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
-              showMore ? "text-primary" : "text-muted-foreground hover:text-foreground",
+              showMore ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
-            style={{
-              background: showMore
-                ? "rgba(255,255,255,0.72)"
-                : "rgba(255,255,255,0.45)",
-              backdropFilter: "blur(40px) saturate(180%)",
-              border: "1px solid rgba(255,255,255,0.5)",
-              boxShadow: "0 2px 12px -2px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
-            }}
+            style={glassStyle}
           >
-            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
-              background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
-            }} />
+            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: glassGradient }} />
             <MoreHorizontal className="relative z-10 h-5 w-5" />
             <span className="relative z-10 leading-none">More</span>
           </button>
