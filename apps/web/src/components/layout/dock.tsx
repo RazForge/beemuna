@@ -210,13 +210,11 @@ export function Dock() {
             <Link
               key={href}
               href={href}
-              className={cn(
-                "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
-                isActive(href) ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-              style={glassStyle}
+            className={cn(
+              "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
+              isActive(href) ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
             >
-              <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: glassGradient }} />
               <Icon className="relative z-10 h-5 w-5" strokeWidth={isActive(href) ? 2.5 : 2} />
               <span className="relative z-10 leading-none">{t(labelKey)}</span>
             </Link>
@@ -229,9 +227,7 @@ export function Dock() {
               "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
               showNotifs ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
-            style={glassStyle}
           >
-            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: glassGradient }} />
             <div className="relative z-10">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
@@ -248,9 +244,7 @@ export function Dock() {
               "relative flex flex-col items-center gap-0.5 rounded-2xl px-3.5 py-2 text-[10px] font-medium transition-all duration-200",
               showMore ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
-            style={glassStyle}
           >
-            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: glassGradient }} />
             <MoreHorizontal className="relative z-10 h-5 w-5" />
             <span className="relative z-10 leading-none">More</span>
           </button>
