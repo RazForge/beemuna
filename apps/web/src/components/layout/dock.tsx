@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   X,
+  FolderKanban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
@@ -35,11 +36,11 @@ interface NotificationItem {
 
 const dockItems = [
   { labelKey: "nav_home", href: "/dashboard", icon: Home },
+  { labelKey: "nav_projects", href: "/projects", icon: FolderKanban },
   { labelKey: "nav_journal", href: "/journal", icon: BookOpen },
-  { labelKey: "nav_calendar", href: "/calendar", icon: CalendarDays },
   { labelKey: "nav_ai", href: "/ai", icon: Bot },
   { labelKey: "nav_goals", href: "/goals", icon: Target },
-  { labelKey: "nav_growth", href: "/timeline", icon: TrendingUp },
+  { labelKey: "nav_journey", href: "/journey", icon: TrendingUp },
   { labelKey: "nav_knowledge", href: "/knowledge", icon: Brain },
 ];
 
