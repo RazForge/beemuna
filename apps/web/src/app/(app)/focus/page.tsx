@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch } from "@/lib/api";
 import { formatError } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Square } from "lucide-react";
+import { Play, Pause, Square, Coffee } from "lucide-react";
 import { toast } from "sonner";
 import { useLang } from "@/lib/i18n";
 
@@ -19,13 +19,42 @@ interface FocusSession {
   started_at: string;
 }
 
+const TOTAL_SECONDS = 25 * 60;
+
+function playComplete() {
+  try {
+    const ctx = new AudioContext();
+    const playBeep = (freq: number, start: number, dur: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur);
+    };
+    playBeep(523, 0, 0.2);
+    playBeep(659, 0.22, 0.2);
+    playBeep(784, 0.44, 0.2);
+    playBeep(1047, 0.66, 0.4);
+  } catch {}
+}
+
 export default function FocusPage() {
   const queryClient = useQueryClient();
   const { t } = useLang();
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [timeLeft, setTimeLeft] = useState(TOTAL_SECONDS);
   const [running, setRunning] = useState(false);
+  const startRef = useRef<number | null>(null);
+  const totalRef = useRef(TOTAL_SECONDS);
+  const rafRef = useRef<number>(0);
+  const completedRef = useRef(false);
 
+  // Load active session from server
   useQuery({
     queryKey: ["active-focus"],
     queryFn: async () => {
@@ -33,20 +62,81 @@ export default function FocusPage() {
       const s = list[0] || null;
       if (s && (!activeSession || activeSession.id !== s.id)) {
         setActiveSession(s);
-        setTimeLeft(s.remaining_seconds ?? 25 * 60);
+        const remaining = s.remaining_seconds ?? TOTAL_SECONDS;
+        totalRef.current = s.planned_minutes * 60;
+        setTimeLeft(remaining);
+        startRef.current = Date.now() - ((s.planned_minutes * 60 - remaining) * 1000);
         setRunning(true);
+        completedRef.current = false;
       }
       return list;
     },
   });
+
+  // Background timer using requestAnimationFrame + timestamp
+  useEffect(() => {
+    if (!running || !startRef.current) return;
+
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - startRef.current!) / 1000);
+      const remaining = Math.max(0, totalRef.current - elapsed);
+      setTimeLeft(remaining);
+
+      if (remaining <= 0 && !completedRef.current) {
+        completedRef.current = true;
+        setRunning(false);
+        playComplete();
+        toast.success(t("focus_completed"));
+        updateSession.mutate({ status: "completed", remaining_seconds: 0 });
+
+        // Send browser notification
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Focus Session Complete", { body: "Great work! Time for a break." });
+        }
+        return;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [running]);
+
+  // Sync when page becomes visible again
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && running && startRef.current) {
+        const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
+        const remaining = Math.max(0, totalRef.current - elapsed);
+        setTimeLeft(remaining);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [running]);
+
+  // Keep page title updated with timer
+  useEffect(() => {
+    if (running) {
+      const m = Math.floor(timeLeft / 60);
+      const s = timeLeft % 60;
+      document.title = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")} — Focus | BE'EMUNA`;
+    } else {
+      document.title = "Focus — BE'EMUNA";
+    }
+  }, [running, timeLeft]);
 
   const startSession = useMutation({
     mutationFn: () => apiPost<FocusSession>("/focus", { kind: "pomodoro", planned_minutes: 25 }),
     onSuccess: (s) => {
       queryClient.invalidateQueries({ queryKey: ["active-focus"] });
       setActiveSession(s);
-      setTimeLeft(25 * 60);
+      totalRef.current = s.planned_minutes * 60;
+      setTimeLeft(s.planned_minutes * 60);
+      startRef.current = Date.now();
       setRunning(true);
+      completedRef.current = false;
     },
     onError: (err) => toast.error(formatError(err)),
   });
@@ -60,6 +150,7 @@ export default function FocusPage() {
       if (s.status === "completed" || s.status === "cancelled") {
         setActiveSession(null);
         setRunning(false);
+        startRef.current = null;
       } else {
         setActiveSession(s);
       }
@@ -67,25 +158,10 @@ export default function FocusPage() {
     onError: (err) => toast.error(formatError(err)),
   });
 
-  useEffect(() => {
-    if (!running || timeLeft <= 0) return;
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          updateSession.mutate({ status: "completed" });
-          toast.success(t("focus_completed"));
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [running, timeLeft, updateSession]);
-
-  const progress = ((25 * 60 - timeLeft) / (25 * 60)) * 100;
+  const progress = ((totalRef.current - timeLeft) / totalRef.current) * 100;
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
+  const circumference = 2 * Math.PI * 120;
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-8 py-12">
@@ -107,10 +183,11 @@ export default function FocusPage() {
             cx="128"
             cy="128"
             r="120"
-            className="stroke-primary fill-none transition-all duration-1000"
+            className="stroke-primary fill-none transition-all duration-300"
             strokeWidth="4"
-            strokeDasharray={2 * Math.PI * 120}
-            strokeDashoffset={2 * Math.PI * 120 * (1 - progress / 100)}
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - progress / 100)}
+            strokeLinecap="round"
           />
         </svg>
 
@@ -132,11 +209,22 @@ export default function FocusPage() {
         ) : (
           <>
             {running ? (
-              <Button size="lg" variant="outline" className="w-28" onClick={() => { setRunning(false); updateSession.mutate({ status: "paused", remaining_seconds: timeLeft }); }}>
+              <Button size="lg" variant="outline" className="w-28" onClick={() => {
+                setRunning(false);
+                const elapsed = startRef.current ? Math.floor((Date.now() - startRef.current) / 1000) : 0;
+                const remaining = Math.max(0, totalRef.current - elapsed);
+                setTimeLeft(remaining);
+                updateSession.mutate({ status: "paused", remaining_seconds: remaining });
+              }}>
                 <Pause className="h-4 w-4" /> {t("pause")}
               </Button>
             ) : (
-              <Button size="lg" className="w-28" onClick={() => { setRunning(true); updateSession.mutate({ status: "running" }); }}>
+              <Button size="lg" className="w-28" onClick={() => {
+                startRef.current = Date.now() - ((totalRef.current - timeLeft) * 1000);
+                setRunning(true);
+                completedRef.current = false;
+                updateSession.mutate({ status: "running" });
+              }}>
                 <Play className="h-4 w-4" /> {t("resume")}
               </Button>
             )}
@@ -146,6 +234,13 @@ export default function FocusPage() {
           </>
         )}
       </div>
+
+      {running && (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Coffee className="h-3 w-3" />
+          Timer keeps running even when you navigate away
+        </p>
+      )}
     </div>
   );
 }

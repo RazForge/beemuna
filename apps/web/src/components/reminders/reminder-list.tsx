@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Plus, Trash2, CalendarClock, Bell, BellOff } from "lucide-react";
+import { Check, Plus, Trash2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 import type { Reminder } from "@/lib/types";
@@ -54,13 +54,37 @@ function playAlarm() {
   } catch {}
 }
 
-function formatAddDate(d: Date): string {
+function toInputValue(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   const h = String(d.getHours()).padStart(2, "0");
   const min = String(d.getMinutes()).padStart(2, "0");
   return `${y}-${m}-${day}T${h}:${min}`;
+}
+
+function AppleTimeButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "rounded-xl px-3 py-2 text-sm font-medium transition-all",
+        active
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "bg-muted text-muted-foreground hover:bg-muted/80",
+      )}
+    >
+      {label}
+    </button>
+  );
 }
 
 export function ReminderList({
@@ -74,14 +98,16 @@ export function ReminderList({
 }: ReminderListProps) {
   const { t } = useLang();
   const [text, setText] = useState("");
-  const [datetime, setDatetime] = useState(() => {
+  const [showSheet, setShowSheet] = useState(false);
+  const [pickedDate, setPickedDate] = useState(() => {
     const d = defaultDate ? new Date(defaultDate) : new Date();
     d.setHours(d.getHours() + 1, 0, 0, 0);
-    return formatAddDate(d);
+    return d;
   });
   const firedRef = useRef<Set<string>>(new Set());
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Alarm checker — polls every 10s, plays sound when reminder is due
+  // Alarm checker
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
@@ -93,7 +119,7 @@ export function ReminderList({
           firedRef.current.add(r.id);
           playAlarm();
           toast(r.title, {
-            icon: <Bell className="h-4 w-4" />,
+            icon: <Clock className="h-4 w-4" />,
             description: "Reminder due now",
             duration: 10000,
           });
@@ -106,19 +132,17 @@ export function ReminderList({
     return () => clearInterval(interval);
   }, [reminders]);
 
-  // Request notification permission on mount
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
   }, []);
 
-  // Update datetime when defaultDate changes
   useEffect(() => {
     if (defaultDate) {
       const d = new Date(defaultDate);
       d.setHours(d.getHours() + 1, 0, 0, 0);
-      setDatetime(formatAddDate(d));
+      setPickedDate(d);
     }
   }, [defaultDate?.toDateString?.()]);
 
@@ -142,16 +166,29 @@ export function ReminderList({
   const completed = reminders.filter((r) => r.status === "completed");
   const total = reminders.filter((r) => r.status !== "completed").length;
 
+  function quickTime(hoursFromNow: number) {
+    const d = new Date();
+    d.setHours(d.getHours() + hoursFromNow, 0, 0, 0);
+    return d;
+  }
+
   function submit() {
     const title = text.trim();
     if (!title || !onAdd) return;
-    const date = datetime ? new Date(datetime) : new Date();
-    onAdd(title, date);
+    onAdd(title, pickedDate);
     setText("");
-    // Reset datetime to next hour
+    setShowSheet(false);
     const next = new Date();
     next.setHours(next.getHours() + 1, 0, 0, 0);
-    setDatetime(formatAddDate(next));
+    setPickedDate(next);
+  }
+
+  function openSheet() {
+    const d = new Date();
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    setPickedDate(d);
+    setShowSheet(true);
+    setTimeout(() => inputRef.current?.focus(), 100);
   }
 
   return (
@@ -203,37 +240,77 @@ export function ReminderList({
         </div>
       )}
 
-      {onAdd && (
-        <div className="mt-3 rounded-2xl bg-card/60 p-3 ring-1 ring-black/5 transition-colors focus-within:ring-2 focus-within:ring-primary/60 dark:ring-white/10">
-          <div className="flex items-center gap-2">
-            <Plus className="h-4 w-4 shrink-0 text-muted-foreground" />
+      {/* Apple-style add button */}
+      {onAdd && !showSheet && (
+        <button
+          onClick={openSheet}
+          className="mt-3 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/30 bg-primary/5 py-3 text-sm font-medium text-primary transition-all hover:bg-primary/10 hover:border-primary/50"
+        >
+          <Plus className="h-4 w-4" />
+          Add Reminder
+        </button>
+      )}
+
+      {/* Apple-style bottom sheet */}
+      {showSheet && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowSheet(false)}
+          />
+          {/* Sheet */}
+          <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-card p-6 pb-10 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 animate-in slide-in-from-bottom duration-300">
+            {/* Handle */}
+            <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-muted-foreground/30" />
+
             <input
+              ref={inputRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") submit();
+                if (e.key === "Enter" && text.trim()) submit();
               }}
-              placeholder={t("add_reminder")}
-              className="h-10 w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground/70"
+              placeholder="Reminder title"
+              className="mb-4 h-12 w-full rounded-2xl bg-muted px-4 text-[17px] font-medium outline-none placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-primary/40"
             />
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />
+
+            {/* Quick time shortcuts */}
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick</p>
+            <div className="mb-4 flex flex-wrap gap-2">
+              <AppleTimeButton label="In 30 min" active={pickedDate.getTime() === quickTime(0).getTime() + 30 * 60000} onClick={() => { const d = new Date(); d.setMinutes(d.getMinutes() + 30); setPickedDate(d); }} />
+              <AppleTimeButton label="In 1 hr" active={false} onClick={() => setPickedDate(quickTime(1))} />
+              <AppleTimeButton label="In 2 hr" active={false} onClick={() => setPickedDate(quickTime(2))} />
+              <AppleTimeButton label="Tomorrow 9am" active={false} onClick={() => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); setPickedDate(d); }} />
+            </div>
+
+            {/* Custom datetime */}
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Custom</p>
             <input
               type="datetime-local"
-              value={datetime}
-              onChange={(e) => setDatetime(e.target.value)}
-              className="h-9 flex-1 rounded-xl bg-transparent px-2 text-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-primary/60 dark:ring-white/10"
+              value={toInputValue(pickedDate)}
+              onChange={(e) => setPickedDate(new Date(e.target.value))}
+              className="mb-5 h-12 w-full rounded-2xl bg-muted px-4 text-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-primary/40 dark:ring-white/10"
             />
-            <button
-              onClick={submit}
-              disabled={!text.trim()}
-              className="h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-            >
-              {t("add")}
-            </button>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSheet(false)}
+                className="h-12 flex-1 rounded-2xl bg-muted text-sm font-semibold text-foreground transition-colors hover:bg-muted/80"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submit}
+                disabled={!text.trim()}
+                className="h-12 flex-1 rounded-2xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+              >
+                Add Reminder
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
