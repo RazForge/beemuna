@@ -2,54 +2,54 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Cappuccino theme — warm coffee tones. Dark is the default. */
+/* BEMUNNA — Modern indigo/slate palette. Light default. */
 :root {
-  --background: #f4efe6;
-  --foreground: #201812;
-  --card: #fdfaf4;
-  --card-foreground: #201812;
-  --popover: #fdfaf4;
-  --popover-foreground: #201812;
-  --primary: #8a5a33;
-  --primary-foreground: #fdfaf4;
-  --secondary: #eae0d0;
-  --secondary-foreground: #201812;
-  --muted: #e9e0d2;
-  --muted-foreground: #7a6a58;
-  --accent: #eadcc8;
-  --accent-foreground: #201812;
-  --destructive: #b94f3b;
-  --destructive-foreground: #fdfaf4;
-  --success: #5d8a4e;
-  --warning: #c78a2f;
-  --border: #e2d7c4;
-  --input: #d4c6ad;
-  --ring: #8a5a33;
-  --radius: 1.375rem;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #e0e7ff;
+  --accent-foreground: #3730a3;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #6366f1;
+  --radius: 1rem;
 }
 
 .dark {
-  --background: #14100d;
-  --foreground: #f5efe6;
-  --card: #1e1813;
-  --card-foreground: #f5efe6;
-  --popover: #1e1813;
-  --popover-foreground: #f5efe6;
-  --primary: #c89b6a;
-  --primary-foreground: #2a2017;
-  --secondary: #2b221a;
-  --secondary-foreground: #f5efe6;
-  --muted: #2a221a;
-  --muted-foreground: #a99b8a;
-  --accent: #2f251c;
-  --accent-foreground: #f5efe6;
-  --destructive: #e0785a;
-  --destructive-foreground: #2a2017;
-  --success: #8fbf7f;
-  --warning: #d9a441;
-  --border: #3a2e24;
-  --input: #45372b;
-  --ring: #c89b6a;
+  --background: #0a0a0f;
+  --foreground: #f1f5f9;
+  --card: #13131a;
+  --card-foreground: #f1f5f9;
+  --popover: #13131a;
+  --popover-foreground: #f1f5f9;
+  --primary: #818cf8;
+  --primary-foreground: #0f0d1a;
+  --secondary: #1e1e2e;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e1e2e;
+  --muted-foreground: #94a3b8;
+  --accent: #1e1b4b;
+  --accent-foreground: #c7d2fe;
+  --destructive: #f87171;
+  --destructive-foreground: #0f0d1a;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #818cf8;
 }
 
 @theme inline {
@@ -74,10 +74,10 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 12px);
-  --radius-md: calc(var(--radius) - 8px);
-  --radius-lg: calc(var(--radius) - 4px);
-  --radius-xl: var(--radius);
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --font-serif: var(--font-playfair);
   --font-handwriting: var(--font-caveat);
@@ -94,10 +94,8 @@
     @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
-  h1,
-  h2,
-  h3 {
-    @apply tracking-[-0.02em];
+  h1, h2, h3 {
+    @apply tracking-[-0.025em];
   }
   ::selection {
     @apply bg-primary text-primary-foreground;
@@ -112,37 +110,44 @@
     text-wrap: balance;
   }
   .apple-card {
-    @apply relative rounded-[22px] border border-black/10 bg-white/70 backdrop-blur-2xl shadow-[0_0_0_0.5px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] dark:border-white/15 dark:bg-[#221a13]/60 dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)];
+    @apply relative rounded-2xl border border-border bg-card shadow-sm;
   }
   .apple-card-hover {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.05),0_16px_40px_rgba(0,0,0,0.12)];
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md;
   }
   .glass {
-    @apply relative border border-black/10 bg-white/60 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:border-white/15 dark:bg-[#1c150f]/55 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)];
+    @apply relative border border-border/50 bg-card/80 backdrop-blur-xl shadow-lg;
   }
-  /* Frosted top sheen + inner edge light — gives that Apple "glass" pop */
-  .glass::before,
-  .apple-card::before {
+  .glass::before {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 40%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent 50%);
+  }
+  .dark .glass::before {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 50%);
   }
   .dock-item {
-    @apply relative flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-all duration-200 hover:scale-110 hover:bg-black/5 hover:text-primary dark:hover:bg-white/10;
+    @apply relative flex h-11 w-11 items-center justify-center rounded-2xl text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-primary;
   }
   .dock-item-active {
-    @apply bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:bg-primary hover:text-primary-foreground dark:shadow-[0_4px_12px_rgba(200,155,106,0.4)];
+    @apply bg-primary text-primary-foreground shadow-lg;
+  }
+  .stat-card {
+    @apply relative overflow-hidden rounded-2xl border border-border bg-card p-5;
+  }
+  .stat-card-value {
+    @apply text-3xl font-bold tracking-tight;
+  }
+  .stat-card-label {
+    @apply mt-1 text-sm font-medium text-muted-foreground;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

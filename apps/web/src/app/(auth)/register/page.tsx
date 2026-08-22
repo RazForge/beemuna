@@ -9,9 +9,9 @@ import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatError, cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -48,23 +48,27 @@ export default function RegisterPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>{t("create_account")}</CardTitle>
-        <CardDescription>{t("create_account_subtitle")}</CardDescription>
-      </CardHeader>
-      <div className="relative px-6 pt-1">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+    >
+      <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
         <GoogleAuthButton />
-        <div className="mt-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
-          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">or</span>
-          <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            or
+          </span>
+          <div className="h-px flex-1 bg-border" />
         </div>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">{t("name_optional")}</Label>
+            <Label htmlFor="name" className="text-sm font-medium">
+              {t("name_optional")}
+            </Label>
             <Input
               id="name"
               type="text"
@@ -72,10 +76,13 @@ export default function RegisterPage() {
               placeholder={t("name_optional")}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="h-11 rounded-xl"
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="email">{t("email")}</Label>
+            <Label htmlFor="email" className="text-sm font-medium">
+              {t("email")}
+            </Label>
             <Input
               id="email"
               type="email"
@@ -84,10 +91,13 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="h-11 rounded-xl"
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">{t("password")}</Label>
+            <Label htmlFor="password" className="text-sm font-medium">
+              {t("password")}
+            </Label>
             <Input
               id="password"
               type="password"
@@ -97,14 +107,16 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
+              className="h-11 rounded-xl"
             />
           </div>
+
           <div className="space-y-2">
-            <Label>{t("ai_perspective")}</Label>
-            <p className="text-[12px] text-muted-foreground">
+            <Label className="text-sm font-medium">{t("ai_perspective")}</Label>
+            <p className="text-xs text-muted-foreground">
               What perspective would you like BEMUNNA to consider when giving personal advice?
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="grid gap-2">
               {PERSPECTIVES.map((r) => (
                 <button
                   key={r.value}
@@ -113,29 +125,29 @@ export default function RegisterPage() {
                   className={cn(
                     "rounded-xl border px-4 py-3 text-left transition-all",
                     religion === r.value
-                      ? "border-primary bg-primary/10"
-                      : "border-black/10 hover:border-black/20 dark:border-white/15 dark:hover:border-white/30",
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                      : "border-border hover:border-primary/30 hover:bg-muted/50",
                   )}
                 >
-                  <span className="block text-[14px] font-semibold">{r.label}</span>
-                  <span className="block text-[12px] text-muted-foreground">{r.hint}</span>
+                  <span className="block text-sm font-semibold">{r.label}</span>
+                  <span className="block mt-0.5 text-xs text-muted-foreground">{r.hint}</span>
                 </button>
               ))}
             </div>
           </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" className="w-full" loading={loading}>
+
+          <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold" loading={loading}>
             {t("create_account")}
           </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            {t("already_have_account")}{" "}
-            <Link href="/login" className="font-medium text-primary hover:underline">
-              {t("sign_in")}
-            </Link>
-          </p>
-        </CardFooter>
-      </form>
-    </Card>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          {t("already_have_account")}{" "}
+          <Link href="/login" className="font-semibold text-primary hover:underline">
+            {t("sign_in")}
+          </Link>
+        </p>
+      </div>
+    </motion.div>
   );
 }

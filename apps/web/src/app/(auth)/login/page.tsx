@@ -9,9 +9,9 @@ import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatError } from "@/lib/utils";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -36,23 +36,27 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>{t("sign_in")}</CardTitle>
-        <CardDescription>{t("sign_in_subtitle")}</CardDescription>
-      </CardHeader>
-      <div className="relative px-6 pt-1">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+    >
+      <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
         <GoogleAuthButton />
-        <div className="mt-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
-          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">or</span>
-          <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            or
+          </span>
+          <div className="h-px flex-1 bg-border" />
         </div>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="email">{t("email")}</Label>
+            <Label htmlFor="email" className="text-sm font-medium">
+              {t("email")}
+            </Label>
             <Input
               id="email"
               type="email"
@@ -61,10 +65,13 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="h-11 rounded-xl"
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">{t("password")}</Label>
+            <Label htmlFor="password" className="text-sm font-medium">
+              {t("password")}
+            </Label>
             <Input
               id="password"
               type="password"
@@ -73,21 +80,21 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="h-11 rounded-xl"
             />
           </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" className="w-full" loading={loading}>
+          <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold" loading={loading}>
             {t("sign_in")}
           </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            {t("no_account")}{" "}
-            <Link href="/register" className="font-medium text-primary hover:underline">
-              {t("register")}
-            </Link>
-          </p>
-        </CardFooter>
-      </form>
-    </Card>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          {t("no_account")}{" "}
+          <Link href="/register" className="font-semibold text-primary hover:underline">
+            {t("register")}
+          </Link>
+        </p>
+      </div>
+    </motion.div>
   );
 }
