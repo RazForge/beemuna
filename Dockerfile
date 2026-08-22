@@ -15,4 +15,5 @@ COPY apps/api/ .
 EXPOSE 8002
 
 ENV PORT=8002
+ENV BUILD_ID=acad897
 CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 300"]
