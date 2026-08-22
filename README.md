@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # BE'EMUNA
 
@@ -6,7 +6,6 @@
 
 A full-stack personal operating system for productivity, journaling, knowledge management, and AI-powered assistance — built with faith-aware design.
 
-[![License: Private](https://img.shields.io/badge/License-Private-red)]()
 [![CI](https://github.com/RazForge/beemuna/actions/workflows/ci.yml/badge.svg)](https://github.com/RazForge/beemuna/actions)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
 [![Next.js 16](https://img.shields.io/badge/next.js-16-black)](https://nextjs.org)
@@ -48,6 +47,7 @@ BE'EMUNA is a personal productivity platform that combines task management, jour
 ### System
 - **Reminders & Notifications** — schedule-aware with quiet hours
 - **Journey** — achievements, progress paths, and life score
+- **Mobile App** — Android APK built with Expo (React Native)
 - **Mobile-First Design** — responsive across all devices
 
 ## Architecture
@@ -185,4 +185,3 @@ All endpoints under `/api/v1`:
 ## License
 
 Private / proprietary. Contact [RazForge](https://github.com/RazForge) for access.
-]]>
