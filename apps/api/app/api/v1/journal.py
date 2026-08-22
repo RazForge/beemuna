@@ -1,8 +1,10 @@
 import uuid
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timezone, timedelta
+from collections import Counter
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session as OrmSession
+from sqlalchemy import func
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
@@ -107,3 +109,80 @@ def delete_entry(
     entry = _get_entry(db, entry_id, user)
     db.delete(entry)
     db.commit()
+
+
+@router.get("/search", response_model=list[JournalEntryOut])
+def search_entries(
+    q: str = Query(..., min_length=2, max_length=200),
+    limit: int = Query(default=20, le=50),
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> list[JournalEntry]:
+    """Search journal entries by content or title."""
+    pattern = f"%{q}%"
+    return (
+        db.query(JournalEntry)
+        .filter(
+            JournalEntry.user_id == user.id,
+            (JournalEntry.content.ilike(pattern)) | (JournalEntry.title.ilike(pattern)),
+        )
+        .order_by(JournalEntry.entry_date.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+@router.get("/mood/analytics")
+def mood_analytics(
+    days: int = Query(default=30, le=365),
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Get mood trend analytics for the last N days."""
+    since = date.today() - timedelta(days=days)
+    entries = (
+        db.query(JournalEntry)
+        .filter(
+            JournalEntry.user_id == user.id,
+            JournalEntry.entry_date >= since,
+            JournalEntry.mood.isnot(None),
+        )
+        .all()
+    )
+
+    mood_counts = Counter()
+    mood_by_week = {}
+    total = 0
+    mood_values = {"low": 1, "neutral": 2, "okay": 3, "good": 4, "great": 5}
+
+    for e in entries:
+        mood_counts[e.mood] += 1
+        total += mood_values.get(e.mood, 3)
+        week = e.entry_date.isocalendar()[1]
+        key = f"W{week}"
+        if key not in mood_by_week:
+            mood_by_week[key] = Counter()
+        mood_by_week[key][e.mood] += 1
+
+    avg_mood = round(total / len(entries), 2) if entries else 0
+    most_common = mood_counts.most_common(1)[0] if mood_counts else ("none", 0)
+
+    weekly_trends = {}
+    for week, counts in sorted(mood_by_week.items()):
+        week_total = sum(counts.values())
+        week_avg = sum(mood_values.get(m, 3) * c for m, c in counts.items()) / week_total
+        weekly_trends[week] = {
+            "avg_mood": round(week_avg, 2),
+            "total_entries": week_total,
+            "distribution": dict(counts),
+        }
+
+    return {
+        "period_days": days,
+        "total_entries": len(entries),
+        "average_mood": avg_mood,
+        "average_mood_label": max(mood_values, key=lambda k: abs(mood_values[k] - avg_mood)) if avg_mood else "none",
+        "most_common_mood": most_common[0],
+        "mood_distribution": dict(mood_counts),
+        "weekly_trends": weekly_trends,
+    }

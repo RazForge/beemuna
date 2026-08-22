@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 from datetime import UTC, datetime
 
@@ -36,8 +37,11 @@ from app.services.memory_service import (
     get_relevant_memories,
     list_memories,
     update_memory,
+    extract_memories_from_conversation,
 )
 from app.services.timeline_service import add_timeline_item
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -340,6 +344,12 @@ def send_message(
         assistant_msg.status = "completed"
         assistant_msg.sources = sources
         db.commit()
+        # Auto-extract memories from conversation
+        if getattr(user, "ai_save_new_memories", True):
+            try:
+                extract_memories_from_conversation(db, user.id, payload.content, reply)
+            except Exception:
+                logger.exception("Auto-memory extraction failed")
     except Exception as exc:
         assistant_msg.content = ""
         assistant_msg.status = "error"
@@ -459,6 +469,12 @@ async def send_message_stream(
                 db, user.id, "ai_insight", f"AI conversation: {conv.mode}",
                 entity_id=conv.id, occurred_at=now, meta={"query": payload.content[:200]},
             )
+            # Auto-extract memories from conversation
+            if not error and getattr(user, "ai_save_new_memories", True) and assistant_msg.content:
+                try:
+                    extract_memories_from_conversation(db, user.id, payload.content, assistant_msg.content)
+                except Exception:
+                    logger.exception("Auto-memory extraction failed")
             db.commit()
         yield f"data: {json.dumps({'done': True, 'error': error}, ensure_ascii=False)}\n\n"
 

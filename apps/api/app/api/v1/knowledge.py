@@ -571,3 +571,153 @@ async def semantic_search(
         if source:
             results.append(SearchResult(chunk=chunk, source=source, score=score))
     return results
+
+@router.get("/spaces/{space_id}/graph")
+def get_knowledge_graph(
+    space_id: uuid.UUID,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Get knowledge graph data (nodes + edges) for visualization."""
+    _get_space(db, space_id, user)
+
+    concepts = (
+        db.query(Concept)
+        .filter(Concept.knowledge_space_id == space_id, Concept.user_id == user.id)
+        .all()
+    )
+    relationships = (
+        db.query(Relationship)
+        .filter(
+            Relationship.knowledge_space_id == space_id,
+            Relationship.user_id == user.id,
+        )
+        .all()
+    )
+
+    nodes = [
+        {
+            "id": str(c.id),
+            "label": c.name,
+            "type": c.concept_type or "concept",
+            "confidence": c.confidence,
+            "aliases": c.aliases or [],
+            "source_count": len(c.source_ids or []),
+        }
+        for c in concepts
+    ]
+
+    edges = [
+        {
+            "id": str(r.id),
+            "source": str(r.source_concept_id),
+            "target": str(r.target_concept_id),
+            "type": r.relationship_type or "related_to",
+            "weight": r.weight or 1.0,
+        }
+        for r in relationships
+    ]
+
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "stats": {
+            "total_concepts": len(nodes),
+            "total_relationships": len(edges),
+        },
+    }
+
+
+@router.post("/spaces/{space_id}/extract-concepts")
+def extract_concepts_from_space(
+    space_id: uuid.UUID,
+    db: OrmSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Auto-extract concepts from document chunks using keyword extraction."""
+    _get_space(db, space_id, user)
+
+    chunks = (
+        db.query(DocumentChunk)
+        .filter(
+            DocumentChunk.knowledge_space_id == space_id,
+            DocumentChunk.user_id == user.id,
+        )
+        .all()
+    )
+
+    import re
+    from collections import Counter
+
+    STOP_WORDS = {
+        "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+        "have", "has", "had", "do", "does", "did", "will", "would", "could",
+        "should", "may", "might", "shall", "can", "need", "dare", "ought",
+        "used", "to", "of", "in", "for", "on", "with", "at", "by", "from",
+        "as", "into", "through", "during", "before", "after", "above", "below",
+        "between", "out", "off", "over", "under", "again", "further", "then",
+        "once", "here", "there", "when", "where", "why", "how", "all", "both",
+        "each", "few", "more", "most", "other", "some", "such", "no", "nor",
+        "not", "only", "own", "same", "so", "than", "too", "very", "just",
+        "don", "now", "this", "that", "these", "those", "and", "but", "or",
+        "if", "while", "it", "its", "he", "she", "they", "them", "we", "you",
+        "i", "me", "my", "your", "his", "her", "our", "their", "what", "which",
+        "who", "whom", "about", "up", "also", "like", "much", "well", "back",
+        "even", "still", "new", "good", "one", "two", "first", "last", "long",
+        "great", "little", "old", "right", "big", "high", "different", "small",
+        "large", "next", "early", "young", "important", "public", "bad", "same",
+        "able", "make", "get", "know", "take", "come", "see", "think", "want",
+        "give", "use", "find", "tell", "ask", "work", "seem", "feel", "try",
+        "leave", "call", "could", "say", "said", "often", "never", "always",
+    }
+
+    word_counter = Counter()
+    bigram_counter = Counter()
+
+    for chunk in chunks:
+        text = re.sub(r"[^a-zA-Z\s]", " ", chunk.content.lower())
+        words = [w for w in text.split() if w not in STOP_WORDS and len(w) > 2]
+        word_counter.update(words)
+        for i in range(len(words) - 1):
+            bigram = f"{words[i]} {words[i+1]}"
+            bigram_counter.update([bigram])
+
+    existing_names = {
+        c.name.lower()
+        for c in db.query(Concept).filter(Concept.knowledge_space_id == space_id).all()
+    }
+
+    created_concepts = []
+    for term, count in bigram_counter.most_common(10):
+        if count >= 3 and term not in existing_names:
+            concept = Concept(
+                user_id=user.id,
+                knowledge_space_id=space_id,
+                name=term.title(),
+                concept_type="auto_extracted",
+                confidence=min(count / 10.0, 1.0),
+                source_ids=[],
+            )
+            db.add(concept)
+            created_concepts.append({"name": term.title(), "occurrences": count})
+
+    for word, count in word_counter.most_common(15):
+        if count >= 5 and word not in existing_names and word.title() not in existing_names:
+            concept = Concept(
+                user_id=user.id,
+                knowledge_space_id=space_id,
+                name=word.title(),
+                concept_type="auto_extracted",
+                confidence=min(count / 15.0, 1.0),
+                source_ids=[],
+            )
+            db.add(concept)
+            created_concepts.append({"name": word.title(), "occurrences": count})
+
+    db.commit()
+
+    return {
+        "created": len(created_concepts),
+        "concepts": created_concepts,
+        "chunks_analyzed": len(chunks),
+    }
