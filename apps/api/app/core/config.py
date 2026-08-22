@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     secret_key: str = "change-me"
     access_token_expire_minutes: int = 60 * 24 * 7
 
-    database_url: str = "postgresql+psycopg://beemuna:beemuna_dev@localhost:5432/beemuna"
+    database_url: str = "postgresql+psycopg://beemuna:your_password@localhost:5432/beemuna"
     redis_url: str = "redis://localhost:6379/0"
 
     api_prefix: str = "/api/v1"
