@@ -203,9 +203,9 @@ export default function AIPage() {
   const messages = detailQuery.data?.messages ?? [];
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-5rem)] md:h-[calc(100vh-4rem)] max-w-6xl flex-col gap-3 md:gap-4">
+    <div className="mx-auto flex h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] max-w-6xl flex-col gap-3 md:gap-4">
       {/* Header */}
-      <header className="rounded-2xl border border-border bg-card p-3 md:p-6">
+      <header className="rounded-2xl border border-border/50 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl p-3 md:p-6 shadow-lg shadow-black/[0.03] dark:shadow-black/20">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -271,7 +271,7 @@ export default function AIPage() {
           <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden" onClick={() => setShowSidebar(false)} />
         )}
         <div className={cn(
-          "space-y-1.5 overflow-y-auto rounded-2xl border border-border bg-card p-2 shrink-0",
+          "space-y-1.5 overflow-y-auto rounded-2xl border border-border/50 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl p-2 shrink-0 shadow-lg shadow-black/[0.03] dark:shadow-black/20",
           "fixed md:relative inset-y-0 left-0 z-50 w-64 md:w-56 md:shrink-0 pt-16 md:pt-0 transition-transform duration-200",
           showSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}>
@@ -315,7 +315,7 @@ export default function AIPage() {
           )}
         </div>
 
-        <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border/50 bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl shadow-lg shadow-black/[0.03] dark:shadow-black/20">
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
             {!activeConv && (
               <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
@@ -341,8 +341,8 @@ export default function AIPage() {
                   className={cn(
                     "max-w-[90%] md:max-w-[80%] rounded-2xl px-3 md:px-3.5 py-2 md:py-2.5 text-[13px] md:text-sm leading-relaxed",
                     m.role === "user"
-                      ? "rounded-br-sm bg-primary text-primary-foreground"
-                      : "rounded-bl-sm bg-muted",
+                      ? "rounded-br-sm bg-primary/90 text-primary-foreground shadow-lg shadow-primary/10 backdrop-blur-xl border border-primary/20"
+                      : "rounded-bl-sm bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.08] shadow-lg shadow-black/[0.03] dark:shadow-black/20",
                   )}
                 >
                   {m.content ? (
@@ -355,12 +355,12 @@ export default function AIPage() {
                     </span>
                   )}
                   {m.role === "assistant" && m.sources.length > 0 && (
-                    <div className="mt-2 space-y-1 border-t border-border/60 pt-2">
+                    <div className="mt-2 space-y-1 border-t border-black/[0.06] dark:border-white/[0.08] pt-2">
                       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                         {t("sources")}
                       </p>
                       {m.sources.map((s, i) => (
-                        <div key={i} className="rounded-lg bg-card/70 p-1.5">
+                        <div key={i} className="rounded-lg bg-white/50 dark:bg-white/[0.04] backdrop-blur-md p-1.5 border border-black/[0.04] dark:border-white/[0.06]">
                           <p className="text-xs font-medium">{s.source_title}</p>
                           <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{s.excerpt}</p>
                         </div>
@@ -373,7 +373,7 @@ export default function AIPage() {
 
             {streaming && (
               <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2.5 text-sm leading-relaxed">
+                <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.04] dark:border-white/[0.08] px-3.5 py-2.5 text-sm leading-relaxed shadow-lg shadow-black/[0.03] dark:shadow-black/20">
                   {streamText ? (
                     <span dangerouslySetInnerHTML={{ __html: renderMarkdown(streamText) }} />
                   ) : (
@@ -386,7 +386,7 @@ export default function AIPage() {
             )}
           </div>
 
-          <div className="border-t border-border p-3 md:p-4">
+          <div className="border-t border-border/50 bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl p-3 md:p-4">
             <div className="flex items-end gap-2">
               <textarea
                 value={draft}
@@ -404,16 +404,16 @@ export default function AIPage() {
                 placeholder={activeConv ? t("ask_placeholder") : "Type a message…"}
                 disabled={!activeConv}
                 rows={1}
-                className="h-10 md:h-11 max-h-[120px] flex-1 resize-none overflow-y-auto rounded-2xl border border-input bg-background px-3 md:px-4 py-2 md:py-2.5 text-[13px] md:text-sm focus-ring disabled:opacity-50"
+                className="h-10 md:h-11 max-h-[120px] flex-1 resize-none overflow-y-auto rounded-2xl border border-black/[0.06] dark:border-white/[0.1] bg-white/70 dark:bg-white/[0.05] backdrop-blur-md px-3 md:px-4 py-2 md:py-2.5 text-[13px] md:text-sm focus-ring disabled:opacity-50 shadow-sm"
               />
               {streaming ? (
-                <Button size="icon" className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl" variant="outline" onClick={handleStop} title={t("stop")}>
+                <Button size="icon" className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl backdrop-blur-md" variant="outline" onClick={handleStop} title={t("stop")}>
                   <span className="block h-3 w-3 rounded-[3px] bg-foreground" />
                 </Button>
               ) : (
                 <Button
                   size="icon"
-                  className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl"
+                  className="h-10 w-10 md:h-11 md:w-11 shrink-0 rounded-2xl shadow-lg shadow-primary/20 backdrop-blur-md"
                   disabled={!activeConv || !draft.trim()}
                   onClick={handleSend}
                 >
